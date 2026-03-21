@@ -560,6 +560,40 @@
     .send-btn:disabled { opacity: 0.2; box-shadow: none; }
     .send-btn:not(:disabled):active { opacity: 0.8; }
 
+    /* ── NAIL TRACKER ── */
+    .nail-stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:0 20px 18px; }
+    .nail-stat { background:var(--glass); border:1px solid var(--border); border-radius:var(--r-sm); padding:13px 12px; text-align:center; }
+    .nail-stat-val { font-size:26px; font-weight:800; letter-spacing:-1px; color:var(--mint); line-height:1; }
+    .nail-stat-val.red { color:var(--danger); }
+    .nail-stat-val.warn { color:var(--warn); }
+    .nail-stat-label { font-size:10px; color:var(--text3); font-weight:600; letter-spacing:.4px; text-transform:uppercase; margin-top:3px; }
+    .nail-hands { display:flex; justify-content:center; align-items:flex-start; gap:12px; padding:0 16px 20px; }
+    .nail-hand-wrap { display:flex; flex-direction:column; align-items:center; gap:8px; flex:1; max-width:155px; }
+    .nail-hand-label { font-size:11px; color:var(--text3); font-weight:700; letter-spacing:.8px; text-transform:uppercase; }
+    .nail-hand-svg { width:100%; height:auto; touch-action:manipulation; }
+    .nail-group { cursor:pointer; }
+    .nail-fine-row { display:flex; align-items:center; gap:10px; margin:0 20px 18px; padding:13px 14px; background:var(--glass); border:1px solid var(--border); border-radius:var(--r-sm); }
+    .nail-fine-label { font-size:13px; color:var(--text2); flex:1; font-weight:500; }
+    .nail-fine-sym { font-size:15px; color:var(--text3); }
+    .nail-fine-input { width:72px; background:var(--glass2); border:1px solid var(--border); border-radius:var(--r-xs); padding:7px 10px; font-size:16px; font-weight:700; color:var(--text); font-family:inherit; outline:none; text-align:right; }
+    .nail-fine-input:focus { border-color:rgba(62,255,200,0.3); }
+    .nail-hist-wrap { padding:0 20px 10px; }
+    .nail-hist-row { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); }
+    .nail-hist-date { font-size:12px; color:var(--text3); min-width:90px; flex-shrink:0; }
+    .nail-hist-dots { display:flex; gap:4px; flex-wrap:wrap; }
+    .nail-hist-dot { width:9px; height:9px; border-radius:50%; }
+    /* Nail modals */
+    .nail-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.88); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); z-index:200; display:flex; align-items:center; justify-content:center; padding:24px; }
+    .nail-modal { background:var(--bg2); border:1px solid var(--border2); border-radius:24px; padding:30px 24px 22px; width:100%; max-width:340px; display:flex; flex-direction:column; align-items:center; gap:14px; text-align:center; }
+    .nail-modal-icon { font-size:52px; line-height:1; }
+    .nail-modal-title { font-size:21px; font-weight:800; color:var(--text); letter-spacing:-0.5px; }
+    .nail-modal-sub { font-size:14px; color:var(--text2); line-height:1.4; margin-top:-4px; }
+    .nm-btn { width:100%; padding:14px; border-radius:var(--r-sm); border:none; font-size:15px; font-weight:700; font-family:inherit; cursor:pointer; transition:opacity 0.15s; }
+    .nm-btn:active { opacity:0.8; }
+    .nm-btn-red { background:linear-gradient(135deg,#ff4f6a,#e0002a); color:#fff; }
+    .nm-btn-green { background:var(--mint-dim); border:1px solid rgba(62,255,200,0.3); color:var(--mint); }
+    .nm-btn-ghost { background:var(--glass2); border:1px solid var(--border); color:var(--text2); }
+    .nm-btn-cancel { background:none; border:none; color:var(--text3); font-size:13px; padding:6px; }
     /* ── EXPENSE TRACKER ── */
     .curr-row { display:flex; gap:8px; padding:0 20px 16px; }
     .curr-btn { flex:1; padding:10px; border-radius:var(--r-sm); border:1px solid var(--border); background:none; color:var(--text2); font-size:14px; font-weight:600; font-family:inherit; cursor:pointer; transition:all 0.15s; }
@@ -753,12 +787,42 @@
     <div class="exp-day-section" id="exp-day-section"></div>
   </div>
 
+  <!-- NAILS -->
+  <div class="screen hidden" id="screen-nails">
+    <div class="topbar"><div class="topbar-inner"><h1>My <span class="accent">Nails</span></h1></div></div>
+    <div class="nail-stats-row">
+      <div class="nail-stat"><div class="nail-stat-val" id="ns-clean">10</div><div class="nail-stat-label">Clean</div></div>
+      <div class="nail-stat"><div class="nail-stat-val" id="ns-streak">0</div><div class="nail-stat-label">Day streak</div></div>
+      <div class="nail-stat"><div class="nail-stat-val red" id="ns-bitten">0</div><div class="nail-stat-label">Bitten</div></div>
+    </div>
+    <div class="nail-hands">
+      <div class="nail-hand-wrap">
+        <div class="nail-hand-label">Left hand</div>
+        <svg id="hand-left" class="nail-hand-svg" viewBox="0 0 140 210" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+      <div class="nail-hand-wrap">
+        <div class="nail-hand-label">Right hand</div>
+        <svg id="hand-right" class="nail-hand-svg" viewBox="0 0 140 210" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+    </div>
+    <div class="nail-fine-row">
+      <span class="nail-fine-label">Fine per bite (adds to Cash)</span>
+      <span class="nail-fine-sym" id="nail-fine-sym">₺</span>
+      <input class="nail-fine-input" id="nail-fine-input" type="number" inputmode="decimal" value="50">
+    </div>
+    <div class="nail-hist-wrap">
+      <div class="section-label" style="margin-bottom:10px">Bite history</div>
+      <div id="nail-hist-list"></div>
+    </div>
+  </div>
+
   <!-- NAV -->
   <nav class="nav" id="nav">
     <div class="nav-item active" data-tab="today"><div class="nav-icon">◈</div><div class="nav-label">Today</div></div>
     <div class="nav-item" data-tab="looks"><div class="nav-icon">◉</div><div class="nav-label">Looks</div></div>
     <div class="nav-item" data-tab="goals"><div class="nav-icon">◎</div><div class="nav-label">Goals</div></div>
     <div class="nav-item" data-tab="cash"><div class="nav-icon">◑</div><div class="nav-label">Cash</div></div>
+    <div class="nav-item" data-tab="nails"><div class="nav-icon">◒</div><div class="nav-label">Nails</div></div>
     <div class="nav-item" data-tab="stats"><div class="nav-icon">▣</div><div class="nav-label">Stats</div></div>
     <div class="nav-item" data-tab="chat"><div class="nav-icon">◇</div><div class="nav-label">Ask</div></div>
   </nav>
@@ -798,6 +862,29 @@
       <textarea id="chat-input" rows="1" placeholder="Message..."></textarea>
       <button class="send-btn" id="send-btn" disabled>↑</button>
     </div>
+  </div>
+</div>
+
+<!-- NAIL PENALTY OVERLAY -->
+<div class="nail-overlay hidden" id="nail-penalty-overlay">
+  <div class="nail-modal">
+    <div class="nail-modal-icon">✗</div>
+    <div class="nail-modal-title" id="np-title">You bit it.</div>
+    <div class="nail-modal-sub" id="np-sub">Streak resets. Nail biting is a hard habit — but you're tracking it now.</div>
+    <button class="nm-btn nm-btn-red" id="np-fine-btn">Add fine to Cash</button>
+    <button class="nm-btn nm-btn-ghost" id="np-mark-btn">Just mark it (no fine)</button>
+    <button class="nm-btn nm-btn-cancel" id="np-cancel-btn">Wait — I didn't bite it</button>
+  </div>
+</div>
+
+<!-- NAIL RECOVER OVERLAY -->
+<div class="nail-overlay hidden" id="nail-recover-overlay">
+  <div class="nail-modal">
+    <div class="nail-modal-icon">✓</div>
+    <div class="nail-modal-title" id="nr-title">It grew back?</div>
+    <div class="nail-modal-sub">Mark it as recovered — that's progress.</div>
+    <button class="nm-btn nm-btn-green" id="nr-yes-btn">Yes, it's recovered</button>
+    <button class="nm-btn nm-btn-cancel" id="nr-cancel-btn">Cancel</button>
   </div>
 </div>
 
@@ -1090,8 +1177,8 @@ function renderStats(){
 
 // ═══ TABS ═══
 let tab='today';
-const tabMap={today:'screen-today',looks:'screen-looks',goals:'screen-goals',stats:'screen-stats',cash:'screen-cash'};
-const renderMap={today:renderToday,looks:renderLooks,goals:renderGoals,stats:renderStats,cash:renderCash};
+const tabMap={today:'screen-today',looks:'screen-looks',goals:'screen-goals',stats:'screen-stats',cash:'screen-cash',nails:'screen-nails'};
+const renderMap={today:renderToday,looks:renderLooks,goals:renderGoals,stats:renderStats,cash:renderCash,nails:renderNails};
 function switchTab(t){
   if(t==='chat'){openChat();return;}
   tab=t;
@@ -1100,6 +1187,188 @@ function switchTab(t){
   renderMap[t]();
 }
 document.getElementById('nav').addEventListener('click',e=>{const it=e.target.closest('.nav-item');if(it)switchTab(it.dataset.tab);});
+
+// ═══ NAIL TRACKER ═══
+const FINGER_NAMES = [
+  'Left Pinky','Left Ring','Left Middle','Left Index','Left Thumb',
+  'Right Thumb','Right Index','Right Middle','Right Ring','Right Pinky'
+];
+
+let nailData = JSON.parse(localStorage.getItem('m_nails') || 'null') || {
+  nails: new Array(10).fill(false),
+  penalty: 50,
+  history: {},       // { 'YYYY-MM-DD': [indices bitten that day] }
+  startDate: todayKey(),
+};
+if(!nailData.startDate) nailData.startDate = todayKey();
+function saveNails(){ localStorage.setItem('m_nails', JSON.stringify(nailData)); }
+
+let pendingNailIdx = -1;
+
+function nailStreak(){
+  let streak = 0;
+  for(let i = 0; i < 365; i++){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const key = d.toISOString().split('T')[0];
+    if(key < nailData.startDate) break;
+    if((nailData.history[key]||[]).length > 0){ if(i===0) return 0; break; }
+    streak++;
+  }
+  return streak;
+}
+
+// MAIN_FINGERS: left-to-right in SVG for left hand (pinky→index); mirrored for right
+const MAIN_FINGERS = [
+  {x:13, w:18, y:78,  h:85,  rx:9,  nailCY:83, nailRX:7.5, nailRY:5.5},
+  {x:36, w:20, y:58,  h:105, rx:10, nailCY:63, nailRX:9,   nailRY:6.5},
+  {x:60, w:22, y:44,  h:119, rx:11, nailCY:49, nailRX:10,  nailRY:7},
+  {x:84, w:20, y:56,  h:107, rx:10, nailCY:61, nailRX:9,   nailRY:6.5},
+];
+
+function renderHandSVG(svgId, isRight){
+  const svg = document.getElementById(svgId);
+  const mX  = (x,w) => isRight ? 140-x-w : x;
+  const mCX = (cx) => isRight ? 140-cx : cx;
+  // data indices: left=[0,1,2,3,4], right main=[9,8,7,6], right thumb=5
+  const mainIdx = isRight ? [9,8,7,6] : [0,1,2,3];
+  const thumbIdx = isRight ? 5 : 4;
+
+  const FC = 'rgba(255,255,255,0.05)', FS = 'rgba(255,255,255,0.09)';
+  let html = '';
+
+  // Palm
+  html += `<rect x="${mX(12,116)}" y="140" width="116" height="55" rx="28" fill="rgba(255,255,255,0.035)" stroke="${FS}" stroke-width="1"/>`;
+
+  // 4 main fingers
+  for(let i=0;i<4;i++){
+    const f = MAIN_FINGERS[i];
+    const dIdx = mainIdx[i];
+    const bitten = nailData.nails[dIdx];
+    const fx = mX(f.x, f.w);
+    const ncx = mCX(f.x + f.w/2);
+    const nRX = bitten ? f.nailRX*0.55 : f.nailRX;
+    const nRY = bitten ? f.nailRY*0.45 : f.nailRY;
+    const nFill  = bitten ? 'rgba(255,79,106,0.25)'  : 'rgba(62,255,200,0.12)';
+    const nStroke= bitten ? '#ff4f6a' : '#3effc8';
+    const nFilter= bitten ? 'drop-shadow(0 0 6px rgba(255,79,106,0.55))' : 'drop-shadow(0 0 4px rgba(62,255,200,0.4))';
+    html += `<g class="nail-group" data-idx="${dIdx}">`;
+    html += `<rect x="${fx}" y="${f.y}" width="${f.w}" height="${f.h}" rx="${f.rx}" fill="${FC}" stroke="${FS}" stroke-width="1"/>`;
+    html += `<rect x="${fx-8}" y="${f.y-10}" width="${f.w+16}" height="48" rx="12" fill="transparent"/>`; // tap target
+    html += `<ellipse cx="${ncx}" cy="${f.nailCY}" rx="${nRX}" ry="${nRY}" fill="${nFill}" stroke="${nStroke}" stroke-width="1.5" style="filter:${nFilter};pointer-events:none"/>`;
+    html += `</g>`;
+  }
+
+  // Thumb (angled outward)
+  const tBitten = nailData.nails[thumbIdx];
+  const tX = isRight ? 13 : 109;
+  const tCX = tX + 9;
+  const tRot = isRight ? `rotate(22,${tCX},155)` : `rotate(-22,${tCX},155)`;
+  const tNRX = tBitten ? 4.5 : 7.5;
+  const tNRY = tBitten ? 2.5 : 5;
+  const tNFill   = tBitten ? 'rgba(255,79,106,0.25)' : 'rgba(62,255,200,0.12)';
+  const tNStroke = tBitten ? '#ff4f6a' : '#3effc8';
+  const tNFilter = tBitten ? 'drop-shadow(0 0 6px rgba(255,79,106,0.55))' : 'drop-shadow(0 0 4px rgba(62,255,200,0.4))';
+  html += `<g class="nail-group" data-idx="${thumbIdx}">`;
+  html += `<g transform="${tRot}">`;
+  html += `<rect x="${tX}" y="93" width="18" height="65" rx="9" fill="${FC}" stroke="${FS}" stroke-width="1"/>`;
+  html += `<rect x="${tX-8}" y="85" width="34" height="48" rx="12" fill="transparent"/>`;
+  html += `<ellipse cx="${tCX}" cy="98" rx="${tNRX}" ry="${tNRY}" fill="${tNFill}" stroke="${tNStroke}" stroke-width="1.5" style="filter:${tNFilter};pointer-events:none"/>`;
+  html += `</g></g>`;
+
+  svg.innerHTML = html;
+  svg.querySelectorAll('.nail-group').forEach(g => g.addEventListener('click', ()=>onNailTap(parseInt(g.dataset.idx))));
+}
+
+function onNailTap(idx){
+  pendingNailIdx = idx;
+  const name = FINGER_NAMES[idx];
+  if(nailData.nails[idx]){
+    // bitten → offer recovery
+    document.getElementById('nr-title').textContent = `${name} grew back?`;
+    document.getElementById('nail-recover-overlay').classList.remove('hidden');
+  } else {
+    // clean → confirm bite + penalty
+    const pen = parseFloat(document.getElementById('nail-fine-input').value)||0;
+    const sym = typeof currSym==='function' ? currSym() : '₺';
+    document.getElementById('np-title').textContent = `You bit your ${name}.`;
+    document.getElementById('np-sub').textContent = pen>0
+      ? `That's a ${sym}${pen} fine. Streak resets.`
+      : 'Streak resets. Every nail matters.';
+    const fineBtn = document.getElementById('np-fine-btn');
+    fineBtn.textContent = pen>0 ? `Add ${sym}${pen} fine to Cash` : 'Mark it (no fine set)';
+    fineBtn.style.display = '';
+    document.getElementById('nail-penalty-overlay').classList.remove('hidden');
+  }
+}
+
+function confirmBite(addFine){
+  if(pendingNailIdx<0) return;
+  nailData.nails[pendingNailIdx] = true;
+  const key = todayKey();
+  if(!nailData.history[key]) nailData.history[key] = [];
+  nailData.history[key].push(pendingNailIdx);
+  nailData.lastBiteDate = key;
+  if(addFine){
+    const pen = parseFloat(document.getElementById('nail-fine-input').value)||0;
+    if(pen>0 && cashData){
+      if(!cashData.entries[key]) cashData.entries[key]=[];
+      cashData.entries[key].push({id:Date.now(), amount:pen, note:`Nail fine — ${FINGER_NAMES[pendingNailIdx]}`, cat:'other'});
+      saveCash();
+    }
+  }
+  saveNails();
+  pendingNailIdx = -1;
+  document.getElementById('nail-penalty-overlay').classList.add('hidden');
+  renderNails();
+}
+
+function confirmRecover(){
+  if(pendingNailIdx<0) return;
+  nailData.nails[pendingNailIdx] = false;
+  saveNails();
+  pendingNailIdx = -1;
+  document.getElementById('nail-recover-overlay').classList.add('hidden');
+  renderNails();
+}
+
+function renderNailHistory(){
+  const list = document.getElementById('nail-hist-list');
+  const entries = Object.entries(nailData.history)
+    .filter(([,b])=>b.length>0)
+    .sort((a,b)=>b[0].localeCompare(a[0]))
+    .slice(0,20);
+  if(!entries.length){
+    list.innerHTML = '<div class="exp-day-empty" style="padding:6px 0;color:var(--text3);font-size:14px">No bites logged yet. Keep it that way.</div>';
+    return;
+  }
+  list.innerHTML = entries.map(([date,bites])=>{
+    const [y,m,d]=date.split('-').map(Number);
+    const dt=new Date(y,m-1,d);
+    const label=date===todayKey()?'Today':dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    const dots=bites.map(idx=>`<div class="nail-hist-dot" title="${FINGER_NAMES[idx]}" style="background:${idx<5?'#00c8ff':'#a78bfa'}"></div>`).join('');
+    return `<div class="nail-hist-row"><div class="nail-hist-date">${label} · ${bites.length} bite${bites.length>1?'s':''}</div><div class="nail-hist-dots">${dots}</div></div>`;
+  }).join('');
+}
+
+function renderNails(){
+  const bitten = nailData.nails.filter(Boolean).length;
+  document.getElementById('ns-clean').textContent = 10-bitten;
+  document.getElementById('ns-bitten').textContent = bitten;
+  document.getElementById('ns-streak').textContent = nailStreak();
+  document.getElementById('nail-fine-sym').textContent = typeof currSym==='function' ? currSym() : '₺';
+  document.getElementById('nail-fine-input').value = nailData.penalty||50;
+  renderHandSVG('hand-left', false);
+  renderHandSVG('hand-right', true);
+  renderNailHistory();
+}
+
+// Modal buttons
+document.getElementById('np-fine-btn').addEventListener('click', ()=>confirmBite(true));
+document.getElementById('np-mark-btn').addEventListener('click', ()=>confirmBite(false));
+document.getElementById('np-cancel-btn').addEventListener('click', ()=>{ pendingNailIdx=-1; document.getElementById('nail-penalty-overlay').classList.add('hidden'); });
+document.getElementById('nr-yes-btn').addEventListener('click', confirmRecover);
+document.getElementById('nr-cancel-btn').addEventListener('click', ()=>{ pendingNailIdx=-1; document.getElementById('nail-recover-overlay').classList.add('hidden'); });
+document.getElementById('nail-fine-input').addEventListener('change', ()=>{ nailData.penalty=parseFloat(document.getElementById('nail-fine-input').value)||0; saveNails(); });
 
 // ═══ EXPENSE TRACKER ═══
 const EXP_CATS = [
