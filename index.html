@@ -677,7 +677,6 @@ const HABITS = [
   {id:'groom',     name:'Groom intentionally',            sub:'Hair, brows, face — look put together',         g:'morning'},
   // Anytime
   {id:'water',     name:'3L water',                      sub:'Hydration is visible — skin elasticity + glow',  g:'anytime'},
-  {id:'exercise',  name:'Train 30min+',                  sub:'V-taper = lateral delts + lats, 3–4x/week',      g:'anytime'},
   {id:'posture',   name:'Posture check',                 sub:'Chin tuck, shoulders back — immediate effect',   g:'anytime'},
   {id:'eat',       name:'Eat clean',                     sub:'Omega-3s, antioxidants, no added sugar',         g:'anytime'},
   // Night
@@ -727,12 +726,8 @@ const TIPS = [
   {id:'t14', cat:'Sleep', icon:'🛏️', title:'Sleep position and morning puffiness', ev:'Moderate', time:'Immediate',
    body:`Side/front sleeping presses your face into a pillow for 7+ hours — fluid pools, asymmetry develops over time. Back sleeping allows gravity-neutral fluid distribution. Silk or satin pillowcase reduces friction on skin and hair (fewer sleep crease marks, less hair breakage — 2019 consumer dermatology study). Cold water on face first thing in the morning causes vasoconstriction — reduces puffiness fast. Takes 60 seconds and works every time.`},
   // ── FITNESS ──
-  {id:'t15', cat:'Fitness', icon:'💪', title:'V-taper: highest ROI muscles for attractiveness', ev:'Very Strong', time:'8–16 weeks visible',
-   body:`Shoulder-to-waist ratio ~1.6:1 is the strongest physical predictor of male attractiveness across cultures (Singh 1995; Maisey et al. 1999; Sorokowski et al. 2012). Priority: (1) Lateral deltoids — cable/dumbbell lateral raises 3–4 sets × 15–20 reps, 3×/week — directly widens shoulder silhouette. (2) Lats — pull-ups, lat pulldowns — creates the V shape. (3) Lean waist — every inch of waist lost dramatically improves the ratio. Chest is secondary to shoulders for visual SWR. Train shoulders 2×/week.`},
-  {id:'t16', cat:'Fitness', icon:'📊', title:'Target body fat: 10–13% for peak facial definition', ev:'Strong', time:'8–16 weeks at deficit',
-   body:`Tovée et al. (1999, 2000): highest male attractiveness ratings at 10–13% body fat. This reveals submental definition (jawline), zygomatic prominence (cheekbones), and facial third balance. Below 8%: facial gauntness and orbital hollowing — ratings drop. Above 18–20%: all structure hidden. From worst-case baseline (20%+), reaching 12% is the single most dramatic facial transformation possible without surgery or products. Rate: 0.5–1% BF per week at a 400–600 kcal/day deficit with resistance training.`},
-  {id:'t17', cat:'Fitness', icon:'🧍', title:'Posture training — the exercises', ev:'Strong', time:'8–12 weeks',
-   body:`Rounded shoulders and FHP kill your frame and face simultaneously. Protocol: Face pulls with rope (3×15) and band pull-aparts (3×20) — targets posterior deltoids and external rotators. Chin tucks 3×10 multiple times daily. Doorway pec stretch 3×30 sec. Dead bugs and hollow holds for anterior pelvic tilt. McGill et al. physiotherapy RCTs confirm corrective protocol effectiveness within 8–12 weeks. Do corrective work every single training session.`},
+  {id:'t15', cat:'Fitness', icon:'📊', title:'Target body fat: 10–13% for peak facial definition', ev:'Strong', time:'8–16 weeks at deficit',
+   body:`Tovée et al. (1999, 2000): highest male attractiveness ratings at 10–13% body fat. This reveals submental definition (jawline), zygomatic prominence (cheekbones), and facial third balance. Below 8%: facial gauntness and orbital hollowing — ratings drop. Above 18–20%: all structure hidden. From worst-case baseline (20%+), reaching 12% is the single most dramatic facial transformation possible without surgery or products. Rate: 0.5–1% BF per week at a 400–600 kcal/day deficit.`},
   // ── DENTAL ──
   {id:'t18', cat:'Dental', icon:'🦷', title:'Correct oral routine order — night matters most', ev:'Very Strong', time:'Gum health: 2–3 weeks',
    body:`Saliva drops 60–80% during sleep, removing its antibacterial and buffering function — bacteria multiply on debris all night. Night brushing is the non-negotiable one. Correct order: (1) Floss FIRST — removes interdental debris before brushing so fluoride reaches between teeth. (2) Brush 2 min, soft bristle, 45° angle to gum line. (3) Tongue scrape 5–7 passes back to front — reduces VSCs (bad breath compounds) by ~75% (Pedrazzi et al., 2004). (4) Alcohol-free mouthwash last. Do NOT rinse with water after brushing — washes away the fluoride that's still working.`},
@@ -786,18 +781,9 @@ const DEFAULT_GOALS = [
     {text:'First visible facial change — jawline starting to show',done:false},
     {text:'2 months — face noticeably more defined',done:false},
   ]},
-  {id:'g3',title:'Build the V-taper',desc:'Lateral delts + lats = the shoulders-to-waist ratio that actually matters. 3x/week.',deadline:daysFromNow(60),milestones:[
-    {text:'Join gym or set up training space',done:false},
-    {text:'First full week: 3 sessions, shoulder focus each session',done:false},
-    {text:'Add lateral raises to every session — 3–4 sets × 15–20 reps',done:false},
-    {text:'Pull-ups or lat pulldowns progressing weekly',done:false},
-    {text:'1 month — 12+ sessions completed',done:false},
-    {text:'2 months — shoulders visibly wider, posture improved',done:false},
-  ]},
-  {id:'g4',title:'Fix posture',desc:'Forward head posture is hiding your jawline. Chin tucks every day, face pulls every session.',deadline:daysFromNow(21),milestones:[
-    {text:'Learn chin tuck — 3×10, do it right now',done:false},
+  {id:'g4',title:'Fix posture',desc:'Forward head posture is hiding your jawline. Chin tucks every single day.',deadline:daysFromNow(21),milestones:[
+    {text:'Learn chin tuck — 3×15, do it right now',done:false},
     {text:'Chin tucks 3× daily for 7 days straight',done:false},
-    {text:'Face pulls added to every gym session',done:false},
     {text:'3 weeks — head position corrected, neck-jaw line defined',done:false},
   ]},
   {id:'g5',title:'Sleep schedule locked',desc:'7–9h, same time every night. Two weeks no exceptions.',deadline:daysFromNow(14),milestones:[
