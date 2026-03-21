@@ -560,6 +560,34 @@
     .send-btn:disabled { opacity: 0.2; box-shadow: none; }
     .send-btn:not(:disabled):active { opacity: 0.8; }
 
+    /* ── EXERCISE CARDS ── */
+    .ex-card { background:var(--glass); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; margin-bottom:10px; transition:border-color 0.2s; }
+    .ex-card.done { border-color:rgba(62,255,200,0.25); }
+    .ex-visual { background:rgba(255,255,255,0.015); border-bottom:1px solid var(--border); padding:6px 10px 2px; }
+    .ex-visual svg { width:100%; height:auto; display:block; }
+    .ex-body { padding:14px 16px 12px; cursor:pointer; }
+    .ex-row1 { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:3px; }
+    .ex-name { font-size:16px; font-weight:800; color:var(--text); letter-spacing:-0.3px; line-height:1.1; }
+    .ex-subname { font-size:10px; color:var(--text3); font-weight:600; margin-top:2px; }
+    .ex-eff-badge { font-size:18px; font-weight:800; color:var(--mint); letter-spacing:-0.5px; flex-shrink:0; }
+    .ex-target { font-size:11.5px; color:var(--text2); margin-bottom:10px; }
+    .ex-eff-bar { height:3px; background:var(--border); border-radius:2px; margin-bottom:12px; overflow:hidden; }
+    .ex-eff-fill { height:100%; border-radius:2px; background:linear-gradient(90deg,var(--mint2),var(--mint)); }
+    .ex-protocol { display:grid; grid-template-columns:repeat(4,1fr); gap:5px; margin-bottom:12px; }
+    .ex-proto-cell { background:var(--glass2); border:1px solid var(--border); border-radius:var(--r-xs); padding:8px 4px; text-align:center; }
+    .ex-proto-val { font-size:13px; font-weight:800; color:var(--text); line-height:1; }
+    .ex-proto-key { font-size:8.5px; color:var(--text3); font-weight:600; letter-spacing:.3px; text-transform:uppercase; margin-top:2px; }
+    .ex-done-row { display:flex; justify-content:space-between; align-items:center; }
+    .ex-evidence { font-size:11px; color:var(--text3); font-weight:500; }
+    .ex-tick { padding:6px 14px; border-radius:20px; border:1.5px solid var(--border); background:none; color:var(--text3); font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; transition:all 0.2s; }
+    .ex-tick.done { background:var(--mint-dim); border-color:rgba(62,255,200,0.3); color:var(--mint); }
+    .ex-details { border-top:1px solid var(--border); padding:12px 16px; display:none; background:rgba(255,255,255,0.01); }
+    .ex-card.open .ex-details { display:block; }
+    .ex-cue { font-size:13px; color:var(--text); line-height:1.5; margin-bottom:6px; }
+    .ex-cue span { color:var(--mint); font-weight:700; }
+    .ex-result { font-size:12px; color:var(--text2); line-height:1.4; margin-bottom:6px; }
+    .ex-study-cite { font-size:11px; color:var(--text3); font-style:italic; line-height:1.4; }
+
     /* ── NAIL TRACKER ── */
     .nail-stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:0 20px 18px; }
     .nail-stat { background:var(--glass); border:1px solid var(--border); border-radius:var(--r-sm); padding:13px 12px; text-align:center; }
@@ -682,7 +710,7 @@
     </div>
     <div class="progress-wrap">
       <div class="progress-header">
-        <span class="progress-label">Today's habits</span>
+        <span class="progress-label">Habits done today</span>
         <span class="progress-count"><span id="done-n">0</span> / <span id="total-n">0</span></span>
       </div>
       <div class="progress-track"><div class="progress-fill" id="pfill" style="width:0%"></div></div>
@@ -691,18 +719,9 @@
       <div class="done-banner-icon">✦</div>
       <div><div class="done-banner-text">All done.</div><div class="done-banner-sub">Consistency is the whole game.</div></div>
     </div>
-    <div class="section"><div class="section-label">Morning</div><div class="card" id="h-morning"></div></div>
-    <div class="section"><div class="section-label">Anytime</div><div class="card" id="h-anytime"></div></div>
-    <div class="section"><div class="section-label">Night</div><div class="card" id="h-night"></div></div>
-    <div class="section">
-      <div class="section-label" style="display:flex;justify-content:space-between;align-items:center">
-        Morning routine
-        <span id="routine-toggle" style="color:var(--mint);font-size:11px;font-weight:600;letter-spacing:.5px;cursor:pointer">SHOW</span>
-      </div>
-      <div id="routine-card" class="card hidden" style="padding:0;overflow:hidden">
-        <div id="routine-steps"></div>
-      </div>
-    </div>
+    <div class="section"><div class="section-label">Morning</div><div class="card" id="cl-morning"></div></div>
+    <div class="section"><div class="section-label">During the day</div><div class="card" id="cl-day"></div></div>
+    <div class="section"><div class="section-label">Tonight</div><div class="card" id="cl-night"></div></div>
   </div>
 
   <!-- LOOKS -->
@@ -908,20 +927,32 @@
 
 <script>
 // ═══ DATA ═══
-const HABITS = [
-  // Morning
-  {id:'brush-am',  name:'Brush teeth (before breakfast)', sub:'Removes overnight bacteria before eating',           g:'morning'},
-  // Anytime
-  {id:'water',     name:'3L water',                      sub:'Hydration is visible — skin elasticity + glow',        g:'anytime'},
-  {id:'posture',   name:'Posture check',                 sub:'Chin tuck, shoulders back — immediate effect',         g:'anytime'},
-  {id:'eat',       name:'Eat clean',                     sub:'Omega-3s, antioxidants, no added sugar',               g:'anytime'},
-  // Night
-  {id:'floss',     name:'Floss (night)',                 sub:'Do it BEFORE brushing — clears gaps so fluoride penetrates', g:'night'},
-  {id:'brush-pm',  name:'Brush teeth (night)',           sub:'Most important brush — saliva drops 80% during sleep', g:'night'},
-  {id:'cleanse2',  name:'Face wash (night)',             sub:'Remove the day — necessary before retinol',            g:'night'},
-  {id:'retinol',   name:'Retinol',                       sub:'Pea-size on dry skin — 2–3x/week to start',           g:'night'},
-  {id:'sleep',     name:'7–9h sleep, same time',         sub:'Most effective recovery tool that exists',              g:'night'},
+const CHECKLIST = [
+  // MORNING
+  {id:'r-water1', name:'500ml water',           sub:'Before anything else. Rehydrates overnight loss.',                      sec:'morning'},
+  {id:'r-bed',    name:'Make bed',              sub:'90 seconds. First win of the day.',                                     sec:'morning'},
+  {id:'r-splash', name:'Cold water on face',    sub:'10–15 seconds. Kills puffiness instantly.',                             sec:'morning'},
+  {id:'brush-am', name:'Brush teeth',           sub:'Before breakfast. Removes overnight bacteria.',                         sec:'morning', streak:true},
+  {id:'r-shower', name:'Shower — cold finish',  sub:'30–60s cold at the end. Reduces inflammation, wakes you up.',          sec:'morning'},
+  {id:'r-deo',    name:'Deodorant',             sub:'Dry skin only.',                                                        sec:'morning'},
+  {id:'r-dress',  name:'Get dressed — check fit',sub:'Shoulder seams at shoulder point. 10-second mirror check.',           sec:'morning'},
+  {id:'r-room',   name:'Clean room',            sub:'5 minutes. Clear surfaces + floor. Environment = mood.',               sec:'morning'},
+  {id:'r-food',   name:'Breakfast — 3 eggs + bread', sub:'~21g protein. 5 minutes. No excuses.',                           sec:'morning'},
+  {id:'r-exer',   name:'Facial exercises',      sub:'5 min — chin tucks, CTAR, jaw clench, tongue press.',                 sec:'morning'},
+  {id:'r-water2', name:'500ml water (again)',   sub:'You\'re at 1L before noon. 2 more to go.',                            sec:'morning'},
+  // DAY
+  {id:'water',    name:'3L water total',        sub:'Hydration is visible — skin, energy, everything.',                     sec:'day', streak:true},
+  {id:'posture',  name:'Posture check',         sub:'Chin tuck, shoulders back. Do it right now.',                         sec:'day', streak:true},
+  {id:'eat',      name:'Eat clean',             sub:'No added sugar. No processed. Protein at every meal.',                 sec:'day', streak:true},
+  // NIGHT
+  {id:'floss',    name:'Floss',                 sub:'C-shape around each tooth. Before brushing.',                          sec:'night', streak:true},
+  {id:'brush-pm', name:'Brush teeth (night)',   sub:'Most important brush. Don\'t rinse after.',                            sec:'night', streak:true},
+  {id:'cleanse2', name:'Face wash',             sub:'Remove the day. Required before retinol.',                             sec:'night', streak:true},
+  {id:'retinol',  name:'Retinol',               sub:'Pea-size, dry skin, 2–3× per week. Night only.',                     sec:'night', streak:true},
+  {id:'sleep',    name:'7–9h sleep, same time', sub:'Most effective recovery tool that exists.',                            sec:'night', streak:true},
 ];
+// Backwards compatible — streak items = old HABITS for stat functions
+const HABITS = CHECKLIST.filter(c => c.streak);
 
 const TIPS = [
   // ── SKIN ──
@@ -929,14 +960,8 @@ const TIPS = [
    body:`UV is the #1 driver of visible aging and hyperpigmentation. The Australian Nambour RCT (Green et al., 2008) showed daily SPF users had 24% less skin aging over 4.5 years vs. discretionary users. Apply SPF 30+ broad-spectrum as your absolute last AM step — after vitamin C, after moisturizer. Use 1/4 teaspoon for your face; most people apply half that and get half the stated SPF. Cloudy days still hit you with 80% UV. This is non-negotiable.`},
   {id:'t2', cat:'Skin', icon:'🔬', title:'Retinol — you have it, use it tonight', ev:'Very Strong', time:'4–6 weeks texture, 3–6 months collagen',
    body:`You already have retinol. That's the most clinically proven topical in dermatology — multiple double-blind RCTs confirm significant improvements in texture, fine lines, dark spots, and collagen density (Kang et al., 2005). Protocol: wash face, wait 20–30 min for skin to fully dry (wet skin = deeper penetration = more irritation). Apply a pea-sized amount to entire face. Moisturize after to buffer irritation. Start 2×/week → 3×/week → nightly over 8 weeks. Dryness and peeling in weeks 2–4 is normal — push through it. SPF in the morning is non-negotiable while using retinol.`},
-  {id:'t3', cat:'Skin', icon:'🍊', title:'Vitamin C serum — AM before SPF', ev:'Strong', time:'4–8 weeks brightness',
-   body:`L-ascorbic acid 10–20% neutralizes UV-generated free radicals, brightens skin tone, inhibits melanin production, and cofactors collagen synthesis. Pinnell et al. (Duke, 2001) established topical penetration requirements. Apply in the AM after cleansing, before moisturizer and SPF — they synergize. Look for formulas with Vitamin E + ferulic acid (reduces UV damage up to 8× vs. vitamin C alone). Discard when it turns orange — oxidized vitamin C does nothing.`},
   {id:'t4', cat:'Skin', icon:'🔷', title:'Niacinamide 5% — pores, tone, barrier', ev:'Strong', time:'4–8 weeks',
    body:`5% niacinamide: reduces sebum production, visibly tightens pores, fades hyperpigmentation, and strengthens the skin barrier via ceramide synthesis. Multiple peer-reviewed RCTs confirm all of these. Goes AM or PM, pairs with nearly every other active. Over 10% can cause flushing in some people — 5% is the clinically validated sweet spot.`},
-  {id:'t5', cat:'Skin', icon:'🧴', title:'Moisturizer with ceramides — AM and PM', ev:'Very Strong', time:'Barrier repair: 1–2 weeks',
-   body:`Ceramides make up 40–50% of your skin barrier lipids (Elias, PMC3175800). A depleted barrier means water loss (TEWL), dull reactive skin, and worsened acne — the opposite of clear defined skin. Apply AM and PM. Critical after retinol to buffer irritation. Look for ceramide NP/AP/EOP + hyaluronic acid + glycerin. Apply to slightly damp skin for maximum hydration lock.`},
-  {id:'t6', cat:'Skin', icon:'🧪', title:'Chemical exfoliation 2–3x/week', ev:'Strong', time:'2–4 weeks glow',
-   body:`AHAs (glycolic, lactic acid) dissolve dead cells that make skin look dull and textured. BHA (salicylic acid 1–2%) penetrates pores — best for blackheads and acne. FDA recognizes AHAs as OTC actives for photoaged skin. Use at night only. Never on the same night as retinol. Never use physical scrubs (walnut shell, St. Ives) — the AAD specifically advises against them due to micro-tears and barrier damage.`},
   {id:'t7', cat:'Skin', icon:'🩹', title:'Under-eye dark circles — what actually works', ev:'Moderate', time:'Days to months depending on cause',
    body:`Dark circles have 3 causes requiring different fixes. (1) Vascular/blue-purple: thin skin showing vessels → topical caffeine for same-day vasoconstriction, retinol long-term to thicken skin. (2) Pigmentation/brown: vitamin C, niacinamide, azelaic acid. (3) Hollow/structural shadow from fat pad loss: only filler or PRP helps — no topical addresses this. Sleep deprivation worsens all three. Eye creams are mostly marketing — your retinol applied carefully around the eye works as well or better.`},
   // ── FACE STRUCTURE ──
@@ -999,18 +1024,55 @@ const TIPS = [
    body:`Wearing clashing colors makes skin look sallow or washed out. Identify your undertone: warm (olive, golden, yellowish) → earth tones, olive, rust, warm whites, camel. Cool (pink, bluish, reddish) → navy, grey, cool white, burgundy, cobalt. When you wear a complementing color your face looks healthier — a free, immediate upgrade most people don't use.`},
 ];
 
-const MORNING_ROUTINE = [
-  {name:'Wake up — drink 500ml water immediately',  note:'Before anything else. Rehydrates overnight water loss, reduces morning face puffiness.'},
-  {name:'Make bed',                                 note:'Immediately after getting up. Takes 90 seconds. A made bed anchors the rest of the routine — you start the day with one task complete.'},
-  {name:'Cold water splash on face',                note:'10–15 seconds. Vasoconstriction shrinks puffiness fast — better than any eye cream.'},
-  {name:'Brush teeth (before breakfast)',           note:'Soft bristle, 45° to gum line, 2 minutes. Do NOT rinse with water after — let the fluoride keep working.'},
-  {name:'Shower — cold finish',                     note:'End with 30–60 seconds cold water. Reduces inflammation, tightens skin, wakes you up properly.'},
-  {name:'Deodorant',                                note:'Apply to dry skin.'},
-  {name:'Get dressed — check fit',                  note:'Shoulder seams at shoulder point. No excess fabric bunching at torso. 10-second mirror check.'},
-  {name:'Clean room — 5 min tidy',                  note:'Clear surfaces, floor, and desk. Takes 5 minutes if done daily. Your environment directly affects your mood, focus, and how you carry yourself.'},
-  {name:'Breakfast — eggs',                         note:'3 eggs scrambled or fried + 2 slices of bread. Takes 5 minutes. 3 eggs = ~21g protein — eat a 4th if you can. Bread gives you fuel without spiking insulin too hard. No salt on eggs, use a tiny bit of butter or olive oil. This is your anchor meal — keeps you full and preserves muscle while you cut.'},
-  {name:'Facial exercises',                         note:'3–5 minutes total. (1) Chin tucks 3×15 — pull chin straight back, hold 5s. (2) CTAR — ball/fist under chin, press down hard 5s × 10 reps. (3) Jaw clench — clench hard 10s × 5 reps, rest 5s between. (4) Tongue to palate — press flat to roof of mouth and hold 30s. Do these now while standing. Consistent daily execution over 6–12 weeks is what produces results.'},
-  {name:'Drink another 500ml water',                note:'You\'re already at 1L before leaving the house. 2L to go.'},
+const EXERCISES = [
+  {
+    id:'chin-tuck', name:'Chin Tuck', target:'Deep neck flexors · cervicomental angle',
+    sets:3, reps:15, hold:'5s', freq:'3× daily', effectiveness:72, evidence:'Strong',
+    study:'Multiple physiotherapy RCTs — significant FHP correction in 4–8 weeks.',
+    cue:'Pull chin straight BACK. Head stays level. Brief double chin. Hold 5s.',
+    result:'Sharper neck-jaw angle visible in photos within 2–4 weeks.',
+    svg:`<svg viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="75" cy="22" rx="16" ry="18" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/><rect x="69" y="38" width="12" height="20" rx="6" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/><path d="M95 62 Q80 56 71 62 Q60 66 42 60" stroke="rgba(255,255,255,0.12)" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M74 43 L48 43 L54 39 M48 43 L54 47" stroke="#3effc8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><text x="8" y="47" fill="#3effc8" font-size="9" font-weight="700" font-family="sans-serif">← BACK</text><text x="8" y="76" fill="rgba(255,255,255,0.22)" font-size="7.5" font-family="sans-serif">side view</text></svg>`
+  },
+  {
+    id:'ctar', name:'CTAR', subname:'Chin Tuck Against Resistance', target:'Suprahyoid muscles · jaw floor (mylohyoid)',
+    sets:2, reps:10, hold:'5s', freq:'2× daily', effectiveness:78, evidence:'Strong',
+    study:'Yoon et al. 2014, Sze et al. 2016 — superior suprahyoid activation vs standard chin tuck.',
+    cue:'Fist or ball under chin. Press chin DOWN hard into it. Hold 5s. Don\'t let it drop.',
+    result:'Submental tightening + jawline definition in 6–12 weeks.',
+    svg:`<svg viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="60" cy="20" rx="16" ry="18" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/><rect x="54" y="36" width="12" height="16" rx="6" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/><ellipse cx="60" cy="62" rx="16" ry="9" fill="rgba(62,255,200,0.06)" stroke="rgba(62,255,200,0.45)" stroke-width="1.5"/><text x="51" y="66" fill="rgba(62,255,200,0.75)" font-size="8" font-family="sans-serif">fist</text><path d="M60 54 L60 42 L56 48 M60 42 L64 48" stroke="#3effc8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><text x="74" y="50" fill="#3effc8" font-size="9" font-weight="700" font-family="sans-serif">↓ press</text><text x="8" y="76" fill="rgba(255,255,255,0.22)" font-size="7.5" font-family="sans-serif">side view</text></svg>`
+  },
+  {
+    id:'jaw-clench', name:'Isometric Jaw Clench', target:'Masseter · jaw angle width',
+    sets:2, reps:5, hold:'10s', freq:'2× daily', effectiveness:62, evidence:'RCT proven',
+    study:'Takano et al. 2021 RCT — significant masseter thickness increase after 4 weeks.',
+    cue:'Clench BACK teeth as hard as possible. Hold 10s. Rest 5s between. Never grind.',
+    result:'Masseter thickness at 4 weeks. Visible jaw angle width at 6–12 months.',
+    svg:`<svg viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="60" cy="40" rx="32" ry="30" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/><ellipse cx="33" cy="38" rx="9" ry="12" fill="rgba(62,255,200,0.07)" stroke="rgba(62,255,200,0.45)" stroke-width="1.5"/><ellipse cx="87" cy="38" rx="9" ry="12" fill="rgba(62,255,200,0.07)" stroke="rgba(62,255,200,0.45)" stroke-width="1.5"/><path d="M22 38 L14 38 L20 34 M14 38 L20 42" stroke="#3effc8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M98 38 L106 38 L100 34 M106 38 L100 42" stroke="#3effc8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><text x="28" y="74" fill="rgba(255,255,255,0.22)" font-size="7.5" font-family="sans-serif">front view — masseter muscles</text></svg>`
+  },
+  {
+    id:'tongue-press', name:'Tongue to Palate', target:'Mylohyoid · deep neck flexors · submental floor',
+    sets:3, reps:1, hold:'30s', freq:'3× daily', effectiveness:65, evidence:'Moderate',
+    study:'Sherwin et al. 2024 — tongue press + chin tuck activates DNF equivalent to head lift.',
+    cue:'Press tongue FLAT to roof of mouth. Whole tongue — not just the tip. Hold 30s.',
+    result:'Submental floor tautness + jaw definition over 6–10 weeks.',
+    svg:`<svg viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22 30 Q60 14 98 30" stroke="rgba(255,255,255,0.15)" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M22 30 Q26 56 60 62 Q94 56 98 30" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" fill="rgba(255,255,255,0.02)"/><path d="M30 52 Q60 26 90 52" stroke="#3effc8" stroke-width="2.5" stroke-linecap="round" fill="rgba(62,255,200,0.06)"/><path d="M60 46 L60 30 L56 36 M60 30 L64 36" stroke="#3effc8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><text x="26" y="74" fill="rgba(255,255,255,0.22)" font-size="7.5" font-family="sans-serif">cross-section — tongue presses up</text></svg>`
+  },
+  {
+    id:'shaker', name:'Head Lift', subname:'Shaker Exercise', target:'Suprahyoid complex · anterior neck',
+    sets:3, reps:1, hold:'60s', freq:'1× daily', effectiveness:70, evidence:'Strong (RCT)',
+    study:'Shaker et al. — RCT confirmed significant suprahyoid muscle strengthening.',
+    cue:'Lie flat on back. Lift ONLY your head off floor. Shoulders stay down. Hold 1 min.',
+    result:'Anterior neck tightening visible at 4–8 weeks.',
+    svg:`<svg viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="66" x2="112" y2="66" stroke="rgba(255,255,255,0.08)" stroke-width="2"/><rect x="25" y="58" width="70" height="10" rx="5" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/><ellipse cx="22" cy="44" rx="14" ry="15" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/><path d="M22 59 L22 49 L18 55 M22 49 L26 55" stroke="#3effc8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><text x="40" y="52" fill="#3effc8" font-size="9" font-weight="700" font-family="sans-serif">head only ↑</text><text x="8" y="77" fill="rgba(255,255,255,0.22)" font-size="7.5" font-family="sans-serif">lying flat — shoulders stay down</text></svg>`
+  },
+  {
+    id:'lateral-neck', name:'Lateral Neck Isometric', target:'SCM · diagonal jaw-framing muscle',
+    sets:2, reps:10, hold:'5s', freq:'1× daily', effectiveness:55, evidence:'Moderate',
+    study:'Isometric neck resistance protocol — established strength and hypertrophy mechanism.',
+    cue:'Palm flat on side of head. Push head into palm — don\'t let it move. Hold 5s. Switch sides.',
+    result:'SCM definition adds visual jaw framing over 6–8 weeks.',
+    svg:`<svg viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="50" cy="26" rx="18" ry="20" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/><rect x="42" y="44" width="16" height="24" rx="8" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/><rect x="80" y="16" width="22" height="26" rx="7" fill="rgba(62,255,200,0.06)" stroke="rgba(62,255,200,0.45)" stroke-width="1.5"/><text x="82" y="32" fill="rgba(62,255,200,0.75)" font-size="8" font-family="sans-serif">palm</text><path d="M78 28 L70 28 L74 24 M70 28 L74 32" stroke="#3effc8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><text x="8" y="76" fill="rgba(255,255,255,0.22)" font-size="7.5" font-family="sans-serif">front view — isometric press</text></svg>`
+  },
 ];
 
 function daysFromNow(n) { const d=new Date(); d.setDate(d.getDate()+n); return d.toISOString().split('T')[0]; }
@@ -1084,51 +1146,38 @@ function renderToday(){
   const h=new Date().getHours();
   document.getElementById('gword').textContent=h<12?'morning':h<17?'afternoon':'evening';
   document.getElementById('streak-n').textContent=globalStreak();
-  const done=HABITS.filter(h=>log[h.id]).length;
+  const habitItems=CHECKLIST.filter(c=>c.streak);
+  const done=habitItems.filter(c=>log[c.id]).length;
   document.getElementById('done-n').textContent=done;
-  document.getElementById('total-n').textContent=HABITS.length;
-  document.getElementById('pfill').style.width=(done/HABITS.length*100)+'%';
-  document.getElementById('done-banner').classList.toggle('hidden',done<HABITS.length);
-  ['morning','anytime','night'].forEach(g=>{
-    const el=document.getElementById('h-'+g); el.innerHTML='';
-    HABITS.filter(h=>h.g===g).forEach(habit=>{
-      const isDone=!!log[habit.id], streak=getStreak(habit.id);
+  document.getElementById('total-n').textContent=habitItems.length;
+  document.getElementById('pfill').style.width=(done/habitItems.length*100)+'%';
+  document.getElementById('done-banner').classList.toggle('hidden',done<habitItems.length);
+  ['morning','day','night'].forEach(sec=>{
+    const el=document.getElementById('cl-'+sec); el.innerHTML='';
+    CHECKLIST.filter(c=>c.sec===sec).forEach(item=>{
+      const isDone=!!log[item.id];
+      const streak=item.streak?getStreak(item.id):0;
       const d=document.createElement('div');
       d.className='habit-item'+(isDone?' done':'');
-      d.innerHTML=`<div class="habit-check"></div><div class="habit-info"><div class="habit-name">${habit.name}</div><div class="habit-sub">${habit.sub}</div></div>${streak>1?`<div class="streak-tag">🔥${streak}d</div>`:''}`;
+      d.innerHTML=`<div class="habit-check"></div><div class="habit-info"><div class="habit-name">${item.name}</div><div class="habit-sub">${item.sub}</div></div>${streak>1?`<div class="streak-tag">🔥${streak}d</div>`:''}`;
       d.addEventListener('click',()=>{
         if(!S.log[t])S.log[t]={};
-        const was=S.log[t][habit.id];
-        S.log[t][habit.id]=!was;
-        upStreak(habit.id,!was); save(); renderToday();
+        const was=S.log[t][item.id];
+        S.log[t][item.id]=!was;
+        if(item.streak)upStreak(item.id,!was);
+        save();renderToday();
       });
       el.appendChild(d);
     });
   });
-  // Morning routine
-  const routineEl = document.getElementById('routine-steps');
-  if(routineEl && !routineEl.hasChildNodes()){
-    MORNING_ROUTINE.forEach((s,i)=>{
-      const d=document.createElement('div');
-      d.className='routine-step';
-      d.innerHTML=`<div class="routine-num">${i+1}</div><div class="routine-body"><div class="routine-name">${s.name}</div><div class="routine-note">${s.note}</div></div>`;
-      routineEl.appendChild(d);
-    });
-    document.getElementById('routine-toggle').addEventListener('click',()=>{
-      const card=document.getElementById('routine-card');
-      const btn=document.getElementById('routine-toggle');
-      const hidden=card.classList.toggle('hidden');
-      btn.textContent=hidden?'SHOW':'HIDE';
-    });
-  }
 }
 
 // ═══ LOOKS ═══
 let aCat='All';
 function renderLooks(){
-  const cats=['All',...new Set(TIPS.map(t=>t.cat))];
+  const tipCats=['All','Exercises',...new Set(TIPS.map(t=>t.cat))];
   const row=document.getElementById('cat-row'); row.innerHTML='';
-  cats.forEach(c=>{
+  tipCats.forEach(c=>{
     const p=document.createElement('div');
     p.className='cat-pill'+(c===aCat?' active':'');
     p.textContent=c;
@@ -1136,6 +1185,49 @@ function renderLooks(){
     row.appendChild(p);
   });
   const list=document.getElementById('tips-list'); list.innerHTML='';
+  if(aCat==='Exercises'){
+    const wrap=document.createElement('div'); wrap.style.cssText='padding:0 18px 20px';
+    const t=todayKey();
+    EXERCISES.forEach(ex=>{
+      const isDone=!!(S.log[t]&&S.log[t]['ex-'+ex.id]);
+      const el=document.createElement('div');
+      el.className='ex-card'+(isDone?' done':'');
+      el.innerHTML=`<div class="ex-visual">${ex.svg}</div>
+        <div class="ex-body">
+          <div class="ex-row1">
+            <div><div class="ex-name">${ex.name}</div>${ex.subname?`<div class="ex-subname">${ex.subname}</div>`:''}</div>
+            <div class="ex-eff-badge">${ex.effectiveness}%</div>
+          </div>
+          <div class="ex-target">${ex.target}</div>
+          <div class="ex-eff-bar"><div class="ex-eff-fill" style="width:${ex.effectiveness}%"></div></div>
+          <div class="ex-protocol">
+            <div class="ex-proto-cell"><div class="ex-proto-val">${ex.sets}</div><div class="ex-proto-key">Sets</div></div>
+            <div class="ex-proto-cell"><div class="ex-proto-val">${ex.reps}</div><div class="ex-proto-key">Reps</div></div>
+            <div class="ex-proto-cell"><div class="ex-proto-val">${ex.hold}</div><div class="ex-proto-key">Hold</div></div>
+            <div class="ex-proto-cell"><div class="ex-proto-val" style="font-size:11px;line-height:1.2">${ex.freq}</div><div class="ex-proto-key">Freq</div></div>
+          </div>
+          <div class="ex-done-row">
+            <span class="ex-evidence">${ex.evidence}</span>
+            <button class="ex-tick${isDone?' done':''}" data-exid="${ex.id}">${isDone?'✓ Done today':'Mark done'}</button>
+          </div>
+        </div>
+        <div class="ex-details">
+          <div class="ex-cue"><span>How:</span> ${ex.cue}</div>
+          <div class="ex-result"><strong>Result:</strong> ${ex.result}</div>
+          <div class="ex-study-cite">${ex.study}</div>
+        </div>`;
+      el.querySelector('.ex-body').addEventListener('click',()=>el.classList.toggle('open'));
+      el.querySelector('.ex-tick').addEventListener('click',e=>{
+        e.stopPropagation();
+        if(!S.log[t])S.log[t]={};
+        S.log[t]['ex-'+ex.id]=!S.log[t]['ex-'+ex.id];
+        save(); renderLooks();
+      });
+      wrap.appendChild(el);
+    });
+    list.appendChild(wrap);
+    return;
+  }
   (aCat==='All'?TIPS:TIPS.filter(t=>t.cat===aCat)).forEach(tip=>{
     const el=document.createElement('div');
     el.className='tip-card';
