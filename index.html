@@ -686,24 +686,19 @@
 // ═══ DATA ═══
 const HABITS = [
   // Morning
-  {id:'brush-am',  name:'Brush teeth (before breakfast)', sub:'Removes overnight bacteria before eating',      g:'morning'},
-  {id:'cleanse1',  name:'Gentle face wash',               sub:'Low-pH cleanser, removes overnight sebum',      g:'morning'},
-  {id:'vitc',      name:'Vitamin C serum',                sub:'10–20% L-ascorbic acid — brighten + protect',   g:'morning'},
-  {id:'moist1',    name:'Moisturize (AM)',                sub:'Humectants + ceramides, lock in barrier',        g:'morning'},
-  {id:'spf',       name:'SPF 30+ (last step)',            sub:'Single most impactful skincare move, period',    g:'morning'},
-  {id:'groom',     name:'Groom intentionally',            sub:'Hair, brows, face — look put together',         g:'morning'},
+  {id:'brush-am',  name:'Brush teeth (before breakfast)', sub:'Removes overnight bacteria before eating',           g:'morning'},
+  {id:'vitc',      name:'Vitamin C serum',                sub:'Few drops on face after water rinse — brighten + collagen', g:'morning'},
+  {id:'moist1',    name:'Moisturize (AM)',                sub:'Apply after Vitamin C — locks in hydration',          g:'morning'},
   // Anytime
-  {id:'water',     name:'3L water',                      sub:'Hydration is visible — skin elasticity + glow',  g:'anytime'},
-  {id:'posture',   name:'Posture check',                 sub:'Chin tuck, shoulders back — immediate effect',   g:'anytime'},
-  {id:'eat',       name:'Eat clean',                     sub:'Omega-3s, antioxidants, no added sugar',         g:'anytime'},
+  {id:'water',     name:'3L water',                      sub:'Hydration is visible — skin elasticity + glow',        g:'anytime'},
+  {id:'posture',   name:'Posture check',                 sub:'Chin tuck, shoulders back — immediate effect',         g:'anytime'},
+  {id:'eat',       name:'Eat clean',                     sub:'Omega-3s, antioxidants, no added sugar',               g:'anytime'},
   // Night
-  {id:'floss',     name:'Floss first',                   sub:'Floss BEFORE brushing — removes interdental debris', g:'night'},
   {id:'brush-pm',  name:'Brush teeth (night)',           sub:'Most important brush — saliva drops 80% during sleep', g:'night'},
-  {id:'tongue',    name:'Tongue scrape',                 sub:'Removes VSCs — reduces bad breath by ~75%',      g:'night'},
-  {id:'cleanse2',  name:'Double cleanse',                sub:'Oil cleanser first, then water-based',           g:'night'},
-  {id:'retinol',   name:'Retinol / Tretinoin',           sub:'Apply dry skin, pea-sized — 2–3x/week to start', g:'night'},
-  {id:'moist2',    name:'Moisturize (PM)',               sub:'Buffer retinol irritation — skin repairs overnight', g:'night'},
-  {id:'sleep',     name:'7–9h sleep, same time',         sub:'Most effective anti-aging tool that exists',      g:'night'},
+  {id:'cleanse2',  name:'Face wash (night)',             sub:'Remove the day — necessary before retinol',            g:'night'},
+  {id:'retinol',   name:'Retinol',                       sub:'Pea-size on dry skin — 2–3x/week to start',           g:'night'},
+  {id:'moist2',    name:'Moisturize (PM)',               sub:'Non-negotiable after retinol — prevents peeling',      g:'night'},
+  {id:'sleep',     name:'7–9h sleep, same time',         sub:'Most effective recovery tool that exists',              g:'night'},
 ];
 
 const TIPS = [
@@ -781,22 +776,17 @@ const TIPS = [
 ];
 
 const MORNING_ROUTINE = [
-  {name:'Wake up — drink 500ml water immediately',    note:'Before anything else. Rehydrates overnight loss, kickstarts metabolism, reduces morning face puffiness.'},
-  {name:'Cold water splash on face',                  note:'10–15 seconds. Vasoconstriction reduces morning puffiness fast. Do this at the sink before anything else.'},
-  {name:'Tongue scrape',                              note:'5–7 passes back to front. Removes overnight VSC bacteria — 75% reduction in bad breath compounds.'},
-  {name:'Floss',                                      note:'Before brushing — removes interdental debris so fluoride reaches between teeth. 2 min.'},
-  {name:'Brush teeth (before breakfast)',             note:'Soft bristle, 45° to gum line, 2 minutes. Do NOT rinse with water after — let fluoride sit.'},
-  {name:'Shower',                                     note:'Finish with 30–60 seconds cold water. Reduces inflammation, tightens skin, sharpens alertness.'},
-  {name:'Skincare — gentle cleanser',                 note:'Low-pH cleanser only. Removes overnight sebum without stripping the acid mantle.'},
-  {name:'Skincare — Vitamin C serum',                 note:'10–20% L-ascorbic acid. Apply to damp skin, let absorb 60 seconds before next step.'},
-  {name:'Skincare — moisturizer',                     note:'Ceramides + hyaluronic acid. Apply to slightly damp skin to lock in hydration.'},
-  {name:'Skincare — SPF 30+ (last)',                  note:'Last step, always. 1/4 teaspoon for face. Wait 20 min before sun exposure.'},
-  {name:'Deodorant',                                  note:'Apply to dry skin. Antiperspirant works better applied the night before and topped up in morning.'},
-  {name:'Groom',                                      note:'Hair styled. Eyebrows checked. Nose hair checked. Beard lined if applicable. Look intentional.'},
-  {name:'Get dressed — check fit',                    note:'Shoulder seams at shoulder point. No excess torso fabric. Look in a mirror before leaving.'},
-  {name:'Breakfast — hit protein target',             note:'Aim for 40–60g protein at breakfast. Eggs, Greek yogurt, cottage cheese, protein shake. Sets the day.'},
-  {name:'Facial exercises',                           note:'Chin tucks 3×15. Tongue-to-palate press holds. Takes under 5 minutes — do them now.'},
-  {name:'Drink another 500ml water',                  note:'You\'re already halfway to your 3L target before you\'ve left the house.'},
+  {name:'Wake up — drink 500ml water immediately',  note:'Before anything else. Rehydrates overnight water loss, reduces morning face puffiness.'},
+  {name:'Cold water splash on face',                note:'10–15 seconds. Vasoconstriction shrinks puffiness fast — better than any eye cream.'},
+  {name:'Brush teeth (before breakfast)',           note:'Soft bristle, 45° to gum line, 2 minutes. Do NOT rinse with water after — let the fluoride keep working.'},
+  {name:'Shower — cold finish',                     note:'End with 30–60 seconds cold water. Reduces inflammation, tightens skin, wakes you up properly.'},
+  {name:'Vitamin C serum',                          note:'A few drops on your face (not a pill — it\'s a liquid you apply to skin). Let it absorb 60 seconds. Brightens skin and boosts collagen production. Buy: The Ordinary Vitamin C ~$6.'},
+  {name:'Moisturizer',                              note:'Apply right after Vitamin C while skin is slightly damp. Seals everything in. Required if you\'re using retinol at night.'},
+  {name:'Deodorant',                                note:'Apply to dry skin.'},
+  {name:'Get dressed — check fit',                  note:'Shoulder seams at shoulder point. No excess fabric bunching at torso. 10-second mirror check.'},
+  {name:'Breakfast — hit protein',                  note:'40–60g protein. Eggs, Greek yogurt, cottage cheese, protein shake. Sets your appetite and muscle preservation for the day.'},
+  {name:'Facial exercises',                         note:'Chin tucks 3×15. Takes 3 minutes. Do them now while it\'s still morning.'},
+  {name:'Drink another 500ml water',                note:'You\'re already at 1L before leaving the house. 2L to go.'},
 ];
 
 function daysFromNow(n) { const d=new Date(); d.setDate(d.getDate()+n); return d.toISOString().split('T')[0]; }
