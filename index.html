@@ -210,6 +210,14 @@
     .done-banner-text { font-size: 14px; font-weight: 700; color: var(--mint); }
     .done-banner-sub  { font-size: 11.5px; color: var(--text2); margin-top: 1px; }
 
+    /* ── ROUTINE ── */
+    .routine-step { display:flex; align-items:flex-start; gap:13px; padding:13px 16px; border-bottom:1px solid var(--border); }
+    .routine-step:last-child { border-bottom:none; }
+    .routine-num { width:22px; height:22px; min-width:22px; border-radius:50%; background:var(--mint-dim); border:1px solid rgba(62,255,200,0.25); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:var(--mint); margin-top:1px; }
+    .routine-body { flex:1; }
+    .routine-name { font-size:13.5px; font-weight:600; color:var(--text); }
+    .routine-note { font-size:11.5px; color:var(--text2); margin-top:2px; line-height:1.4; }
+
     /* ── TIPS ── */
     .cat-row { display: flex; gap: 6px; overflow-x: auto; padding: 0 18px 12px; -webkit-overflow-scrolling: touch; }
     .cat-row::-webkit-scrollbar { display: none; }
@@ -578,6 +586,15 @@
     <div class="section"><div class="section-label">Morning</div><div class="card" id="h-morning"></div></div>
     <div class="section"><div class="section-label">Anytime</div><div class="card" id="h-anytime"></div></div>
     <div class="section"><div class="section-label">Night</div><div class="card" id="h-night"></div></div>
+    <div class="section">
+      <div class="section-label" style="display:flex;justify-content:space-between;align-items:center">
+        Morning routine
+        <span id="routine-toggle" style="color:var(--mint);font-size:11px;font-weight:600;letter-spacing:.5px;cursor:pointer">SHOW</span>
+      </div>
+      <div id="routine-card" class="card hidden" style="padding:0;overflow:hidden">
+        <div id="routine-steps"></div>
+      </div>
+    </div>
   </div>
 
   <!-- LOOKS -->
@@ -763,6 +780,25 @@ const TIPS = [
    body:`Wearing clashing colors makes skin look sallow or washed out. Identify your undertone: warm (olive, golden, yellowish) → earth tones, olive, rust, warm whites, camel. Cool (pink, bluish, reddish) → navy, grey, cool white, burgundy, cobalt. When you wear a complementing color your face looks healthier — a free, immediate upgrade most people don't use.`},
 ];
 
+const MORNING_ROUTINE = [
+  {name:'Wake up — drink 500ml water immediately',    note:'Before anything else. Rehydrates overnight loss, kickstarts metabolism, reduces morning face puffiness.'},
+  {name:'Cold water splash on face',                  note:'10–15 seconds. Vasoconstriction reduces morning puffiness fast. Do this at the sink before anything else.'},
+  {name:'Tongue scrape',                              note:'5–7 passes back to front. Removes overnight VSC bacteria — 75% reduction in bad breath compounds.'},
+  {name:'Floss',                                      note:'Before brushing — removes interdental debris so fluoride reaches between teeth. 2 min.'},
+  {name:'Brush teeth (before breakfast)',             note:'Soft bristle, 45° to gum line, 2 minutes. Do NOT rinse with water after — let fluoride sit.'},
+  {name:'Shower',                                     note:'Finish with 30–60 seconds cold water. Reduces inflammation, tightens skin, sharpens alertness.'},
+  {name:'Skincare — gentle cleanser',                 note:'Low-pH cleanser only. Removes overnight sebum without stripping the acid mantle.'},
+  {name:'Skincare — Vitamin C serum',                 note:'10–20% L-ascorbic acid. Apply to damp skin, let absorb 60 seconds before next step.'},
+  {name:'Skincare — moisturizer',                     note:'Ceramides + hyaluronic acid. Apply to slightly damp skin to lock in hydration.'},
+  {name:'Skincare — SPF 30+ (last)',                  note:'Last step, always. 1/4 teaspoon for face. Wait 20 min before sun exposure.'},
+  {name:'Deodorant',                                  note:'Apply to dry skin. Antiperspirant works better applied the night before and topped up in morning.'},
+  {name:'Groom',                                      note:'Hair styled. Eyebrows checked. Nose hair checked. Beard lined if applicable. Look intentional.'},
+  {name:'Get dressed — check fit',                    note:'Shoulder seams at shoulder point. No excess torso fabric. Look in a mirror before leaving.'},
+  {name:'Breakfast — hit protein target',             note:'Aim for 40–60g protein at breakfast. Eggs, Greek yogurt, cottage cheese, protein shake. Sets the day.'},
+  {name:'Facial exercises',                           note:'Chin tucks 3×15. Tongue-to-palate press holds. Takes under 5 minutes — do them now.'},
+  {name:'Drink another 500ml water',                  note:'You\'re already halfway to your 3L target before you\'ve left the house.'},
+];
+
 function daysFromNow(n) { const d=new Date(); d.setDate(d.getDate()+n); return d.toISOString().split('T')[0]; }
 
 const DEFAULT_GOALS = [
@@ -855,6 +891,22 @@ function renderToday(){
       el.appendChild(d);
     });
   });
+  // Morning routine
+  const routineEl = document.getElementById('routine-steps');
+  if(routineEl && !routineEl.hasChildNodes()){
+    MORNING_ROUTINE.forEach((s,i)=>{
+      const d=document.createElement('div');
+      d.className='routine-step';
+      d.innerHTML=`<div class="routine-num">${i+1}</div><div class="routine-body"><div class="routine-name">${s.name}</div><div class="routine-note">${s.note}</div></div>`;
+      routineEl.appendChild(d);
+    });
+    document.getElementById('routine-toggle').addEventListener('click',()=>{
+      const card=document.getElementById('routine-card');
+      const btn=document.getElementById('routine-toggle');
+      const hidden=card.classList.toggle('hidden');
+      btn.textContent=hidden?'SHOW':'HIDE';
+    });
+  }
 }
 
 // ═══ LOOKS ═══
