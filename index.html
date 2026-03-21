@@ -559,6 +559,54 @@
     }
     .send-btn:disabled { opacity: 0.2; box-shadow: none; }
     .send-btn:not(:disabled):active { opacity: 0.8; }
+
+    /* ── EXPENSE TRACKER ── */
+    .curr-row { display:flex; gap:8px; padding:0 20px 16px; }
+    .curr-btn { flex:1; padding:10px; border-radius:var(--r-sm); border:1px solid var(--border); background:none; color:var(--text2); font-size:14px; font-weight:600; font-family:inherit; cursor:pointer; transition:all 0.15s; }
+    .curr-btn.active { background:var(--mint-dim); border-color:rgba(62,255,200,0.3); color:var(--mint); }
+    .exp-add-card { margin:0 20px 16px; padding:14px; background:var(--glass); border:1px solid var(--border); border-radius:var(--r); display:flex; flex-direction:column; gap:10px; }
+    .exp-amount-row { display:flex; gap:10px; align-items:center; }
+    .exp-symbol { font-size:22px; font-weight:700; color:var(--mint); flex-shrink:0; }
+    .exp-amount-input { flex:1; background:none; border:none; outline:none; font-size:30px; font-weight:700; color:var(--text); font-family:inherit; width:100%; min-width:0; }
+    .exp-amount-input::placeholder { color:var(--text3); }
+    .exp-note-input { background:none; border:none; outline:none; font-size:14px; color:var(--text2); font-family:inherit; border-top:1px solid var(--border); padding-top:10px; width:100%; }
+    .exp-note-input::placeholder { color:var(--text3); }
+    .cat-chips { display:flex; gap:6px; flex-wrap:wrap; }
+    .cat-chip { padding:5px 12px; border-radius:20px; background:var(--glass); border:1px solid var(--border); color:var(--text2); font-size:12px; font-weight:600; cursor:pointer; transition:all 0.15s; font-family:inherit; }
+    .cat-chip.sel { background:var(--mint-dim); border-color:rgba(62,255,200,0.3); color:var(--mint); }
+    .exp-add-btn { padding:12px; border-radius:var(--r-sm); background:linear-gradient(135deg, var(--mint2), var(--mint)); border:none; color:#06060e; font-size:15px; font-weight:800; font-family:inherit; cursor:pointer; letter-spacing:-0.2px; }
+    /* Calendar */
+    .cal-header { display:flex; align-items:center; justify-content:space-between; padding:0 20px 14px; }
+    .cal-month { font-size:17px; font-weight:700; letter-spacing:-0.3px; }
+    .cal-nav-btn { width:32px; height:32px; border-radius:50%; background:var(--glass); border:1px solid var(--border); color:var(--text); font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-family:inherit; }
+    .cal-grid-wrap { padding:0 16px; }
+    .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+    .cal-dow { text-align:center; font-size:10px; font-weight:600; color:var(--text3); padding:4px 0 8px; letter-spacing:.5px; }
+    .cal-day { aspect-ratio:1; border-radius:10px; padding:3px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; transition:background 0.12s; gap:2px; border:1px solid transparent; }
+    .cal-day.empty { pointer-events:none; }
+    .cal-day.has-exp { background:var(--glass); border-color:var(--border); }
+    .cal-day.selected { background:var(--mint-dim) !important; border-color:rgba(62,255,200,0.3) !important; }
+    .cal-day:active:not(.empty) { background:var(--glass2); }
+    .cal-dn { font-size:13px; font-weight:600; color:var(--text2); line-height:1; }
+    .cal-today-dot { width:22px; height:22px; border-radius:50%; background:var(--mint); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:#06060e; line-height:1; }
+    .cal-amt { font-size:9px; font-weight:700; color:var(--mint); letter-spacing:-0.2px; line-height:1; }
+    /* Day detail */
+    .exp-day-section { padding:16px 20px 40px; }
+    .exp-day-title { font-size:13px; font-weight:600; color:var(--text3); letter-spacing:.5px; text-transform:uppercase; margin-bottom:10px; }
+    .exp-day-empty { font-size:14px; color:var(--text3); }
+    .exp-list { display:flex; flex-direction:column; border-radius:var(--r-sm); overflow:hidden; border:1px solid var(--border); margin-bottom:8px; }
+    .exp-row { display:flex; align-items:center; gap:10px; padding:12px 14px; background:var(--glass); }
+    .exp-row + .exp-row { border-top:1px solid var(--border); }
+    .exp-cat-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .exp-row-info { flex:1; min-width:0; }
+    .exp-row-note { font-size:14px; font-weight:500; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .exp-row-cat { font-size:11px; color:var(--text3); margin-top:1px; }
+    .exp-row-amt { font-size:15px; font-weight:700; color:var(--text); flex-shrink:0; }
+    .exp-row-del { width:26px; height:26px; border-radius:50%; background:none; border:none; color:var(--text3); font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .exp-row-del:active { color:var(--danger); }
+    .exp-day-total { display:flex; justify-content:space-between; align-items:center; padding:13px 14px; background:var(--glass2); border-radius:var(--r-sm); border:1px solid var(--border); }
+    .exp-day-total-label { font-size:13px; color:var(--text2); font-weight:600; }
+    .exp-day-total-val { font-size:17px; font-weight:800; color:var(--mint); }
   </style>
 </head>
 <body>
@@ -622,11 +670,37 @@
     <div class="section"><div class="section-label">Last 7 days</div><div id="habit-stats"></div></div>
   </div>
 
+  <!-- CASH -->
+  <div class="screen hidden" id="screen-cash">
+    <div class="topbar"><div class="topbar-inner"><h1>My <span class="accent">Cash</span></h1></div></div>
+    <div class="curr-row">
+      <button class="curr-btn active" id="curr-try">₺ Turkish Lira</button>
+      <button class="curr-btn" id="curr-usd">$ USD</button>
+    </div>
+    <div class="exp-add-card">
+      <div class="exp-amount-row">
+        <span class="exp-symbol" id="exp-symbol">₺</span>
+        <input class="exp-amount-input" id="exp-amount" type="number" inputmode="decimal" placeholder="0">
+      </div>
+      <input class="exp-note-input" id="exp-note" type="text" placeholder="What was it for?">
+      <div class="cat-chips" id="cat-chips"></div>
+      <button class="exp-add-btn" id="exp-add-btn">Add expense</button>
+    </div>
+    <div class="cal-header">
+      <button class="cal-nav-btn" id="cal-prev">‹</button>
+      <div class="cal-month" id="cal-month-label"></div>
+      <button class="cal-nav-btn" id="cal-next">›</button>
+    </div>
+    <div class="cal-grid-wrap"><div class="cal-grid" id="cal-grid"></div></div>
+    <div class="exp-day-section" id="exp-day-section"></div>
+  </div>
+
   <!-- NAV -->
   <nav class="nav" id="nav">
     <div class="nav-item active" data-tab="today"><div class="nav-icon">◈</div><div class="nav-label">Today</div></div>
     <div class="nav-item" data-tab="looks"><div class="nav-icon">◉</div><div class="nav-label">Looks</div></div>
     <div class="nav-item" data-tab="goals"><div class="nav-icon">◎</div><div class="nav-label">Goals</div></div>
+    <div class="nav-item" data-tab="cash"><div class="nav-icon">◑</div><div class="nav-label">Cash</div></div>
     <div class="nav-item" data-tab="stats"><div class="nav-icon">▣</div><div class="nav-label">Stats</div></div>
     <div class="nav-item" data-tab="chat"><div class="nav-icon">◇</div><div class="nav-label">Ask</div></div>
   </nav>
@@ -956,8 +1030,8 @@ function renderStats(){
 
 // ═══ TABS ═══
 let tab='today';
-const tabMap={today:'screen-today',looks:'screen-looks',goals:'screen-goals',stats:'screen-stats'};
-const renderMap={today:renderToday,looks:renderLooks,goals:renderGoals,stats:renderStats};
+const tabMap={today:'screen-today',looks:'screen-looks',goals:'screen-goals',stats:'screen-stats',cash:'screen-cash'};
+const renderMap={today:renderToday,looks:renderLooks,goals:renderGoals,stats:renderStats,cash:renderCash};
 function switchTab(t){
   if(t==='chat'){openChat();return;}
   tab=t;
@@ -966,6 +1040,129 @@ function switchTab(t){
   renderMap[t]();
 }
 document.getElementById('nav').addEventListener('click',e=>{const it=e.target.closest('.nav-item');if(it)switchTab(it.dataset.tab);});
+
+// ═══ EXPENSE TRACKER ═══
+const EXP_CATS = [
+  {id:'food',      label:'Food',      color:'#ff7f50'},
+  {id:'transport', label:'Transport', color:'#00c8ff'},
+  {id:'shopping',  label:'Shopping',  color:'#a78bfa'},
+  {id:'fun',       label:'Fun',       color:'#f472b6'},
+  {id:'other',     label:'Other',     color:'#94a3b8'},
+];
+let cashData = JSON.parse(localStorage.getItem('m_cash') || '{"currency":"TRY","entries":{}}');
+if(!cashData.currency) cashData.currency='TRY';
+if(!cashData.entries)  cashData.entries={};
+
+function saveCash(){ localStorage.setItem('m_cash',JSON.stringify(cashData)); }
+
+let calYear=new Date().getFullYear(), calMonth=new Date().getMonth();
+let selDay=todayKey(), selCat='food';
+
+function currSym(){ return cashData.currency==='TRY'?'₺':'$'; }
+function fmtAmt(n){
+  if(cashData.currency==='TRY') return '₺'+n.toLocaleString('tr-TR',{minimumFractionDigits:0,maximumFractionDigits:2});
+  return '$'+n.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});
+}
+function dayTotal(key){ return (cashData.entries[key]||[]).reduce((s,e)=>s+e.amount,0); }
+
+function renderCash(){
+  document.getElementById('curr-try').classList.toggle('active',cashData.currency==='TRY');
+  document.getElementById('curr-usd').classList.toggle('active',cashData.currency==='USD');
+  document.getElementById('exp-symbol').textContent=currSym();
+  // category chips
+  const chips=document.getElementById('cat-chips');
+  chips.innerHTML=EXP_CATS.map(c=>`<button class="cat-chip${selCat===c.id?' sel':''}" data-cat="${c.id}">${c.label}</button>`).join('');
+  chips.querySelectorAll('.cat-chip').forEach(btn=>btn.addEventListener('click',()=>{selCat=btn.dataset.cat;chips.querySelectorAll('.cat-chip').forEach(b=>b.classList.toggle('sel',b.dataset.cat===selCat));}));
+  renderCal();
+  renderDayDetail();
+}
+
+function renderCal(){
+  const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('cal-month-label').textContent=`${MONTHS[calMonth]} ${calYear}`;
+  const grid=document.getElementById('cal-grid');
+  const todK=todayKey();
+  const dows=['Su','Mo','Tu','We','Th','Fr','Sa'];
+  let html=dows.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  const firstDow=new Date(calYear,calMonth,1).getDay();
+  const daysInMo=new Date(calYear,calMonth+1,0).getDate();
+  for(let i=0;i<firstDow;i++) html+=`<div class="cal-day empty"></div>`;
+  for(let d=1;d<=daysInMo;d++){
+    const key=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const total=dayTotal(key);
+    const isToday=key===todK, isSel=key===selDay, hasExp=total>0;
+    const sym=cashData.currency==='TRY'?'₺':'$';
+    const shortAmt=total>=1000?(total/1000).toFixed(1)+'k':Math.round(total);
+    let cls='cal-day'+(hasExp?' has-exp':'')+(isSel?' selected':'');
+    const dnHtml=isToday?`<div class="cal-today-dot">${d}</div>`:`<div class="cal-dn">${d}</div>`;
+    const amtHtml=hasExp?`<span class="cal-amt">${sym}${shortAmt}</span>`:'';
+    html+=`<div class="${cls}" data-key="${key}">${dnHtml}${amtHtml}</div>`;
+  }
+  grid.innerHTML=html;
+  grid.querySelectorAll('.cal-day:not(.empty)').forEach(cell=>cell.addEventListener('click',()=>{
+    selDay=cell.dataset.key;
+    grid.querySelectorAll('.cal-day').forEach(c=>c.classList.remove('selected'));
+    cell.classList.add('selected');
+    renderDayDetail();
+    document.getElementById('exp-day-section').scrollIntoView({behavior:'smooth',block:'nearest'});
+  }));
+}
+
+function renderDayDetail(){
+  const sec=document.getElementById('exp-day-section');
+  const entries=cashData.entries[selDay]||[];
+  const total=dayTotal(selDay);
+  const [y,m,d]=selDay.split('-').map(Number);
+  const dt=new Date(y,m-1,d);
+  const label=selDay===todayKey()?'Today':dt.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});
+  let html=`<div class="exp-day-title">${label}</div>`;
+  if(!entries.length){
+    html+=`<div class="exp-day-empty">No expenses logged.</div>`;
+  } else {
+    html+=`<div class="exp-list">`;
+    entries.forEach(e=>{
+      const cat=EXP_CATS.find(c=>c.id===e.cat)||EXP_CATS[4];
+      html+=`<div class="exp-row">
+        <div class="exp-cat-dot" style="background:${cat.color}"></div>
+        <div class="exp-row-info">
+          <div class="exp-row-note">${e.note||cat.label}</div>
+          <div class="exp-row-cat">${cat.label}</div>
+        </div>
+        <div class="exp-row-amt">${fmtAmt(e.amount)}</div>
+        <button class="exp-row-del" data-id="${e.id}">✕</button>
+      </div>`;
+    });
+    html+=`</div><div class="exp-day-total"><span class="exp-day-total-label">Total</span><span class="exp-day-total-val">${fmtAmt(total)}</span></div>`;
+  }
+  sec.innerHTML=html;
+  sec.querySelectorAll('.exp-row-del').forEach(btn=>btn.addEventListener('click',()=>{
+    cashData.entries[selDay]=(cashData.entries[selDay]||[]).filter(e=>String(e.id)!==btn.dataset.id);
+    if(!cashData.entries[selDay].length) delete cashData.entries[selDay];
+    saveCash(); renderCal(); renderDayDetail();
+  }));
+}
+
+function addExpense(){
+  const amt=parseFloat(document.getElementById('exp-amount').value);
+  const note=document.getElementById('exp-note').value.trim();
+  if(!amt||amt<=0) return;
+  const key=todayKey();
+  if(!cashData.entries[key]) cashData.entries[key]=[];
+  cashData.entries[key].push({id:Date.now(),amount:amt,note,cat:selCat});
+  saveCash();
+  document.getElementById('exp-amount').value='';
+  document.getElementById('exp-note').value='';
+  selDay=key; calYear=new Date().getFullYear(); calMonth=new Date().getMonth();
+  renderCal(); renderDayDetail();
+}
+
+document.getElementById('curr-try').addEventListener('click',()=>{cashData.currency='TRY';saveCash();renderCash();});
+document.getElementById('curr-usd').addEventListener('click',()=>{cashData.currency='USD';saveCash();renderCash();});
+document.getElementById('exp-add-btn').addEventListener('click',addExpense);
+document.getElementById('exp-amount').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('exp-note').focus();});
+document.getElementById('exp-note').addEventListener('keydown',e=>{if(e.key==='Enter')addExpense();});
+document.getElementById('cal-prev').addEventListener('click',()=>{calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCal();});
+document.getElementById('cal-next').addEventListener('click',()=>{calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCal();});
 
 // ═══ CHAT ═══
 const MODEL='meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8';
