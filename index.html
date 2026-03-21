@@ -1093,7 +1093,7 @@ document.getElementById('chat-input').addEventListener('input', function() {
 // ═══════════════════════════════════════════════════
 
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').catch(() => {});
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
 }
 
 // ═══════════════════════════════════════════════════

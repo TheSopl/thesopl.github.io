@@ -1,5 +1,5 @@
 const CACHE_NAME = 'levelup-v1';
-const ASSETS = ['/', '/index.html'];
+const ASSETS = ['./', './index.html'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS)));
