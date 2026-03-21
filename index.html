@@ -6,1157 +6,989 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Mint">
-  <meta name="theme-color" content="#0a0a0f">
+  <meta name="theme-color" content="#06060e">
   <link rel="manifest" href="manifest.json">
   <title>Mint</title>
   <style>
     :root {
-      --bg: #0a0a0f;
-      --surface: #111118;
-      --card: #16161f;
-      --border: #1f1f2e;
-      --mint: #3effc8;
-      --mint-dim: rgba(62,255,200,0.12);
-      --mint-glow: rgba(62,255,200,0.25);
-      --text: #eeeef5;
-      --muted: #5a5a72;
-      --muted2: #8888a0;
-      --danger: #ff5f6d;
-      --warning: #ffb347;
-      --radius: 16px;
-      --radius-sm: 10px;
+      --bg:       #06060e;
+      --bg2:      #0c0c18;
+      --glass:    rgba(255,255,255,0.03);
+      --glass2:   rgba(255,255,255,0.055);
+      --border:   rgba(255,255,255,0.07);
+      --border2:  rgba(255,255,255,0.12);
+      --mint:     #3effc8;
+      --mint2:    #00e5a0;
+      --mint-dim: rgba(62,255,200,0.08);
+      --mint-glow:rgba(62,255,200,0.18);
+      --mint-glow2:rgba(62,255,200,0.35);
+      --text:     #f0f0fa;
+      --text2:    rgba(240,240,250,0.55);
+      --text3:    rgba(240,240,250,0.28);
+      --danger:   #ff4f6a;
+      --warn:     #ffb040;
+      --r:        16px;
+      --r-sm:     12px;
+      --r-xs:     8px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    html, body { height: 100%; overflow: hidden; background: var(--bg); }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif; color: var(--text); overscroll-behavior: none; }
+    html { height: 100%; background: var(--bg); }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      height: 100%;
+      overflow: hidden;
+      overscroll-behavior: none;
+    }
 
-    /* ── LAYOUT ── */
-    #app { display: flex; flex-direction: column; height: 100%; height: 100dvh; }
-    .screen { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 0 16px; -webkit-overflow-scrolling: touch; }
+    /* ── AMBIENT GLOW ── */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -40%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(62,255,200,0.04) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── APP SHELL ── */
+    #app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; position: relative; z-index: 1; }
+    .screen { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding-bottom: 20px; }
     .screen::-webkit-scrollbar { display: none; }
-
-    /* ── TOP BAR ── */
-    .topbar { padding: env(safe-area-inset-top, 20px) 20px 0; padding-top: max(env(safe-area-inset-top), 52px); }
-    .topbar-inner { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; }
-    .topbar h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
-    .topbar h1 span { color: var(--mint); }
-    .streak-badge { background: var(--mint-dim); border: 1px solid var(--mint-glow); border-radius: 20px; padding: 5px 12px; font-size: 13px; font-weight: 600; color: var(--mint); display: flex; align-items: center; gap: 5px; }
-
-    /* ── SECTION ── */
-    .section { padding: 0 16px; margin-bottom: 24px; }
-    .section-title { font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
-
-    /* ── CARDS ── */
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-    .card + .card { margin-top: 10px; }
-
-    /* ── HABIT ITEM ── */
-    .habit-item { display: flex; align-items: center; gap: 14px; padding: 15px 16px; cursor: pointer; user-select: none; transition: background 0.15s; position: relative; }
-    .habit-item:not(:last-child)::after { content: ''; position: absolute; bottom: 0; left: 16px; right: 0; height: 1px; background: var(--border); }
-    .habit-item:active { background: rgba(255,255,255,0.03); }
-    .habit-check { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-    .habit-item.done .habit-check { background: var(--mint); border-color: var(--mint); }
-    .habit-item.done .habit-check::after { content: ''; display: block; width: 9px; height: 6px; border-left: 2px solid #0a0a0f; border-bottom: 2px solid #0a0a0f; transform: rotate(-45deg) translateY(-1px); }
-    .habit-info { flex: 1; min-width: 0; }
-    .habit-name { font-size: 15px; font-weight: 500; transition: color 0.2s; }
-    .habit-item.done .habit-name { color: var(--muted2); text-decoration: line-through; }
-    .habit-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
-    .habit-streak { font-size: 12px; font-weight: 600; color: var(--mint); background: var(--mint-dim); border-radius: 10px; padding: 2px 8px; white-space: nowrap; }
-
-    /* ── PROGRESS BAR ── */
-    .progress-wrap { padding: 0 16px 20px; }
-    .progress-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
-    .progress-label { color: var(--muted2); }
-    .progress-count { font-weight: 600; color: var(--mint); }
-    .progress-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
-    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--mint), #00c896); border-radius: 3px; transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
-
-    /* ── TIPS ── */
-    .tip-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; cursor: pointer; }
-    .tip-card + .tip-card { margin-top: 10px; }
-    .tip-header { display: flex; align-items: flex-start; gap: 12px; }
-    .tip-icon { font-size: 22px; flex-shrink: 0; width: 42px; height: 42px; background: var(--mint-dim); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
-    .tip-meta { flex: 1; }
-    .tip-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
-    .tip-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
-    .tag { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.3px; }
-    .tag-evidence { background: rgba(62,255,200,0.15); color: var(--mint); }
-    .tag-time { background: rgba(255,179,71,0.15); color: var(--warning); }
-    .tag-cat { background: rgba(255,255,255,0.07); color: var(--muted2); }
-    .tip-body { font-size: 13.5px; color: var(--muted2); line-height: 1.55; margin-top: 12px; display: none; }
-    .tip-body.open { display: block; }
-    .tip-arrow { color: var(--muted); font-size: 13px; transition: transform 0.2s; align-self: center; }
-    .tip-card.open .tip-arrow { transform: rotate(180deg); }
-
-    /* ── CATEGORY PILLS ── */
-    .cat-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 0 16px 12px; -webkit-overflow-scrolling: touch; }
-    .cat-scroll::-webkit-scrollbar { display: none; }
-    .cat-pill { flex-shrink: 0; padding: 7px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; border: 1px solid var(--border); color: var(--muted2); background: var(--card); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
-    .cat-pill.active { background: var(--mint-dim); border-color: var(--mint-glow); color: var(--mint); }
-
-    /* ── GOALS ── */
-    .goal-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
-    .goal-card + .goal-card { margin-top: 10px; }
-    .goal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
-    .goal-title { font-size: 16px; font-weight: 600; }
-    .goal-deadline { font-size: 12px; color: var(--muted); }
-    .goal-desc { font-size: 13.5px; color: var(--muted2); line-height: 1.5; margin-bottom: 12px; }
-    .goal-milestones { border-top: 1px solid var(--border); padding-top: 12px; }
-    .milestone { display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; cursor: pointer; }
-    .milestone-dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; margin-top: 1px; transition: all 0.2s; }
-    .milestone.done .milestone-dot { background: var(--mint); border-color: var(--mint); }
-    .milestone-text { font-size: 13.5px; line-height: 1.4; }
-    .milestone.done .milestone-text { color: var(--muted); text-decoration: line-through; }
-    .goal-progress-wrap { margin-top: 10px; }
-    .goal-pct { font-size: 12px; color: var(--mint); font-weight: 600; text-align: right; margin-bottom: 4px; }
-
-    /* ── ADD GOAL BUTTON ── */
-    .add-goal-btn { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--mint-dim); border: 1px dashed var(--mint-glow); border-radius: var(--radius); padding: 16px; font-size: 15px; font-weight: 600; color: var(--mint); cursor: pointer; transition: all 0.15s; width: 100%; }
-    .add-goal-btn:active { opacity: 0.7; }
-
-    /* ── STATS ── */
-    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
-    .stat-val { font-size: 32px; font-weight: 700; color: var(--mint); letter-spacing: -1px; }
-    .stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
-    .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 6px; }
-    .week-day { aspect-ratio: 1; border-radius: 6px; background: var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
-    .week-day.filled { background: var(--mint-dim); border: 1px solid var(--mint-glow); }
-    .week-day.today { border: 1px solid var(--mint); }
-    .week-day-label { font-size: 9px; color: var(--muted); font-weight: 600; text-transform: uppercase; }
-    .week-day-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--mint); opacity: 0; }
-    .week-day.filled .week-day-dot { opacity: 1; }
-
-    /* ── BOTTOM NAV ── */
-    .nav { display: flex; background: var(--surface); border-top: 1px solid var(--border); padding-bottom: env(safe-area-inset-bottom, 0); flex-shrink: 0; }
-    .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 0 8px; cursor: pointer; transition: all 0.15s; color: var(--muted); }
-    .nav-item.active { color: var(--mint); }
-    .nav-icon { font-size: 22px; }
-    .nav-label { font-size: 10px; font-weight: 600; letter-spacing: 0.3px; }
-
-    /* ── MODAL ── */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 100; display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
-    .modal-overlay.open { opacity: 1; pointer-events: all; }
-    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 24px 24px 0 0; width: 100%; padding: 24px 20px; padding-bottom: max(env(safe-area-inset-bottom), 24px); transform: translateY(20px); transition: transform 0.25s cubic-bezier(0.34, 1.2, 0.64, 1); }
-    .modal-overlay.open .modal { transform: translateY(0); }
-    .modal-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 20px; }
-    .modal h2 { font-size: 20px; font-weight: 700; margin-bottom: 16px; }
-    .input-group { margin-bottom: 14px; }
-    .input-group label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-    .input-group input, .input-group textarea { width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; font-size: 15px; color: var(--text); font-family: inherit; outline: none; resize: none; }
-    .input-group input:focus, .input-group textarea:focus { border-color: var(--mint-glow); }
-    .modal-btn { width: 100%; padding: 16px; background: var(--mint); border-radius: var(--radius-sm); border: none; font-size: 16px; font-weight: 700; color: #0a0a0f; cursor: pointer; margin-top: 8px; }
-    .modal-btn:active { opacity: 0.85; }
-
-    /* ── EMPTY STATE ── */
-    .empty { text-align: center; padding: 40px 20px; color: var(--muted); }
-    .empty-icon { font-size: 40px; margin-bottom: 12px; }
-    .empty p { font-size: 14px; line-height: 1.5; }
-
-    /* ── HIDDEN ── */
     .hidden { display: none !important; }
 
-    /* ── CHAT ── */
-    #screen-chat { display: flex; flex-direction: column; padding: 0; }
-    #screen-chat .topbar { flex-shrink: 0; }
-    .chat-setup { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 24px; text-align: center; gap: 16px; }
-    .chat-setup-icon { font-size: 48px; }
-    .chat-setup h2 { font-size: 22px; font-weight: 700; }
-    .chat-setup p { font-size: 14px; color: var(--muted2); line-height: 1.6; }
-    .chat-setup input { width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; font-size: 14px; color: var(--text); font-family: inherit; outline: none; }
-    .chat-setup input:focus { border-color: var(--mint-glow); }
-    .chat-setup button { width: 100%; padding: 15px; background: var(--mint); border-radius: var(--radius-sm); border: none; font-size: 15px; font-weight: 700; color: #0a0a0f; cursor: pointer; }
-    .chat-messages { flex: 1; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 12px; -webkit-overflow-scrolling: touch; }
-    .chat-messages::-webkit-scrollbar { display: none; }
-    .msg { max-width: 85%; display: flex; flex-direction: column; gap: 3px; }
+    /* ── TOP BAR ── */
+    .topbar { padding: max(env(safe-area-inset-top), 52px) 22px 0; }
+    .topbar-inner { display: flex; justify-content: space-between; align-items: center; padding-bottom: 22px; }
+    .topbar h1 {
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: -0.8px;
+      line-height: 1;
+    }
+    .topbar h1 .accent {
+      background: linear-gradient(135deg, var(--mint), #00c8ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .streak-pill {
+      background: var(--mint-dim);
+      border: 1px solid var(--mint-glow);
+      border-radius: 30px;
+      padding: 6px 13px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--mint);
+      letter-spacing: 0.2px;
+      box-shadow: 0 0 12px rgba(62,255,200,0.1);
+    }
+
+    /* ── GLASS CARD ── */
+    .card {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      overflow: hidden;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+    .card + .card { margin-top: 8px; }
+
+    /* ── SECTIONS ── */
+    .section { padding: 0 18px; margin-bottom: 24px; }
+    .section-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 10px;
+      padding-left: 2px;
+    }
+
+    /* ── PROGRESS ── */
+    .progress-wrap { padding: 0 18px 20px; }
+    .progress-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+    .progress-label { font-size: 12px; color: var(--text2); font-weight: 500; }
+    .progress-count { font-size: 13px; font-weight: 700; color: var(--mint); }
+    .progress-track {
+      height: 4px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--mint2), var(--mint), #00c8ff);
+      border-radius: 4px;
+      transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 0 8px rgba(62,255,200,0.5);
+    }
+
+    /* ── HABIT ITEM ── */
+    .habit-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+      transition: background 0.15s;
+    }
+    .habit-item:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 16px; right: 0;
+      height: 1px;
+      background: var(--border);
+    }
+    .habit-item:active { background: rgba(255,255,255,0.02); }
+
+    .habit-check {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255,255,255,0.14);
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .habit-item.done .habit-check {
+      background: linear-gradient(135deg, var(--mint2), var(--mint));
+      border-color: transparent;
+      box-shadow: 0 0 10px rgba(62,255,200,0.35);
+    }
+    .habit-item.done .habit-check::after {
+      content: '';
+      display: block;
+      width: 8px; height: 5px;
+      border-left: 2px solid #0a0a0f;
+      border-bottom: 2px solid #0a0a0f;
+      transform: rotate(-45deg) translateY(-1px);
+    }
+
+    .habit-info { flex: 1; min-width: 0; }
+    .habit-name {
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: -0.1px;
+      transition: color 0.2s;
+    }
+    .habit-item.done .habit-name { color: var(--text3); text-decoration: line-through; }
+    .habit-sub { font-size: 11.5px; color: var(--text3); margin-top: 2px; font-weight: 400; }
+
+    .streak-tag {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--mint);
+      background: var(--mint-dim);
+      border: 1px solid rgba(62,255,200,0.15);
+      border-radius: 6px;
+      padding: 2px 7px;
+      white-space: nowrap;
+    }
+
+    /* ── DONE BANNER ── */
+    .done-banner {
+      margin: 0 18px 20px;
+      padding: 13px 16px;
+      background: linear-gradient(135deg, rgba(62,255,200,0.08), rgba(0,200,255,0.05));
+      border: 1px solid rgba(62,255,200,0.2);
+      border-radius: var(--r-sm);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      backdrop-filter: blur(10px);
+    }
+    .done-banner-icon { font-size: 20px; }
+    .done-banner-text { font-size: 14px; font-weight: 700; color: var(--mint); }
+    .done-banner-sub  { font-size: 11.5px; color: var(--text2); margin-top: 1px; }
+
+    /* ── TIPS ── */
+    .cat-row { display: flex; gap: 6px; overflow-x: auto; padding: 0 18px 12px; -webkit-overflow-scrolling: touch; }
+    .cat-row::-webkit-scrollbar { display: none; }
+    .cat-pill {
+      flex-shrink: 0;
+      padding: 7px 15px;
+      border-radius: 30px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid var(--border);
+      color: var(--text2);
+      background: var(--glass);
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+      letter-spacing: 0.1px;
+    }
+    .cat-pill.active {
+      background: var(--mint-dim);
+      border-color: var(--mint-glow);
+      color: var(--mint);
+      box-shadow: 0 0 10px rgba(62,255,200,0.08);
+    }
+    .tip-card {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 15px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+      backdrop-filter: blur(20px);
+    }
+    .tip-card + .tip-card { margin-top: 8px; }
+    .tip-card.open { border-color: var(--border2); }
+    .tip-header { display: flex; align-items: flex-start; gap: 12px; }
+    .tip-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+      width: 40px; height: 40px;
+      background: var(--glass2);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .tip-meta { flex: 1; }
+    .tip-title { font-size: 14px; font-weight: 600; letter-spacing: -0.1px; margin-bottom: 7px; }
+    .tip-tags { display: flex; gap: 5px; flex-wrap: wrap; }
+    .tag { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 5px; letter-spacing: 0.2px; }
+    .tag-ev   { background: rgba(62,255,200,0.1);   color: var(--mint); }
+    .tag-time { background: rgba(255,176,64,0.1);   color: var(--warn); }
+    .tag-cat  { background: rgba(255,255,255,0.05); color: var(--text2); }
+    .tip-arrow { color: var(--text3); font-size: 13px; transition: transform 0.22s; align-self: center; }
+    .tip-card.open .tip-arrow { transform: rotate(180deg); }
+    .tip-body { font-size: 13px; color: var(--text2); line-height: 1.6; margin-top: 12px; display: none; padding-top: 12px; border-top: 1px solid var(--border); }
+    .tip-body.open { display: block; }
+
+    /* ── GOALS ── */
+    .goal-card {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 16px;
+      backdrop-filter: blur(20px);
+    }
+    .goal-card + .goal-card { margin-top: 8px; }
+    .goal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+    .goal-title { font-size: 15px; font-weight: 700; letter-spacing: -0.2px; }
+    .goal-due { font-size: 11px; color: var(--text3); font-weight: 500; }
+    .goal-desc { font-size: 13px; color: var(--text2); line-height: 1.5; margin-bottom: 12px; }
+    .goal-miles { border-top: 1px solid var(--border); padding-top: 11px; }
+    .milestone { display: flex; align-items: flex-start; gap: 9px; padding: 5px 0; cursor: pointer; }
+    .m-dot { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--border2); flex-shrink: 0; margin-top: 1px; transition: all 0.2s; }
+    .milestone.done .m-dot { background: linear-gradient(135deg, var(--mint2), var(--mint)); border-color: transparent; }
+    .m-text { font-size: 13px; line-height: 1.4; }
+    .milestone.done .m-text { color: var(--text3); text-decoration: line-through; }
+    .goal-footer { margin-top: 10px; }
+    .goal-pct { font-size: 11px; font-weight: 700; color: var(--mint); text-align: right; margin-bottom: 5px; }
+
+    .add-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      background: var(--mint-dim);
+      border: 1px dashed rgba(62,255,200,0.25);
+      border-radius: var(--r);
+      padding: 16px;
+      font-size: 14px; font-weight: 700;
+      color: var(--mint);
+      cursor: pointer;
+      width: 100%;
+      letter-spacing: 0.2px;
+      transition: background 0.15s;
+    }
+    .add-btn:active { background: rgba(62,255,200,0.12); }
+
+    /* ── STATS ── */
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .stat-card {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 16px;
+      backdrop-filter: blur(20px);
+    }
+    .stat-val { font-size: 32px; font-weight: 800; letter-spacing: -1.5px; line-height: 1; background: linear-gradient(135deg, var(--mint), #00c8ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .stat-label { font-size: 11px; color: var(--text3); margin-top: 5px; font-weight: 500; }
+    .week-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 5px; }
+    .wday { aspect-ratio: 1; border-radius: 7px; background: rgba(255,255,255,0.04); border: 1px solid transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; }
+    .wday.filled { background: var(--mint-dim); border-color: rgba(62,255,200,0.15); }
+    .wday.today  { border-color: var(--mint); }
+    .wday-label { font-size: 8px; font-weight: 700; color: var(--text3); text-transform: uppercase; }
+    .wday-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--mint); opacity: 0; }
+    .wday.filled .wday-dot { opacity: 1; }
+
+    /* ── NAV ── */
+    .nav {
+      display: flex;
+      background: rgba(6,6,14,0.85);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border-top: 1px solid var(--border);
+      padding-bottom: env(safe-area-inset-bottom, 0);
+      flex-shrink: 0;
+    }
+    .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 0 6px; cursor: pointer; color: var(--text3); transition: color 0.15s; }
+    .nav-item.active { color: var(--mint); }
+    .nav-icon { font-size: 19px; line-height: 1; }
+    .nav-label { font-size: 9px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+
+    /* ── MODAL ── */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 100; display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+    .overlay.open { opacity: 1; pointer-events: all; }
+    .modal-sheet {
+      background: #0e0e1c;
+      border: 1px solid var(--border2);
+      border-radius: 22px 22px 0 0;
+      width: 100%;
+      padding: 22px 20px;
+      padding-bottom: max(env(safe-area-inset-bottom), 22px);
+      transform: translateY(12px);
+      transition: transform 0.22s cubic-bezier(0.34, 1.2, 0.64, 1);
+    }
+    .overlay.open .modal-sheet { transform: translateY(0); }
+    .sheet-handle { width: 32px; height: 4px; background: var(--border2); border-radius: 2px; margin: 0 auto 20px; }
+    .modal-sheet h2 { font-size: 19px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 16px; }
+    .field { margin-bottom: 13px; }
+    .field label { display: block; font-size: 10px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+    .field input, .field textarea {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      padding: 12px 14px;
+      font-size: 15px;
+      color: var(--text);
+      font-family: inherit;
+      outline: none;
+      resize: none;
+      transition: border-color 0.15s;
+    }
+    .field input:focus, .field textarea:focus { border-color: rgba(62,255,200,0.3); }
+    .modal-cta {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, var(--mint2), var(--mint));
+      border-radius: var(--r-sm);
+      border: none;
+      font-size: 15px;
+      font-weight: 800;
+      color: #06060e;
+      cursor: pointer;
+      margin-top: 8px;
+      letter-spacing: -0.2px;
+      box-shadow: 0 4px 20px rgba(62,255,200,0.25);
+    }
+
+    /* ═══════════════════════════════
+       CHAT — TRUE FULLSCREEN
+    ═══════════════════════════════ */
+    #chat-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Chat top bar */
+    .chat-bar {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: max(env(safe-area-inset-top), 52px) 16px 12px;
+      background: rgba(6,6,14,0.8);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .chat-bar-back {
+      background: none; border: none;
+      color: var(--mint); font-size: 26px;
+      cursor: pointer; padding: 0 10px 0 0;
+      line-height: 1; font-weight: 300;
+    }
+    .chat-bar-title { font-size: 15px; font-weight: 700; }
+    .chat-bar-sub { font-size: 11px; color: var(--text3); margin-top: 1px; font-weight: 500; }
+    .chat-bar-reset { background: none; border: none; color: var(--text3); font-size: 12px; cursor: pointer; padding: 4px; }
+
+    /* Setup screen */
+    .chat-setup {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 32px 28px; gap: 16px; text-align: center;
+    }
+    .setup-orb {
+      width: 70px; height: 70px;
+      background: linear-gradient(135deg, rgba(62,255,200,0.15), rgba(0,200,255,0.08));
+      border: 1px solid rgba(62,255,200,0.25);
+      border-radius: 22px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 30px;
+      box-shadow: 0 0 30px rgba(62,255,200,0.1);
+    }
+    .chat-setup h2 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+    .chat-setup p { font-size: 14px; color: var(--text2); line-height: 1.65; }
+    .setup-input {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      padding: 14px 16px;
+      font-size: 15px; color: var(--text);
+      font-family: inherit; outline: none;
+      transition: border-color 0.15s;
+    }
+    .setup-input:focus { border-color: rgba(62,255,200,0.35); box-shadow: 0 0 0 3px rgba(62,255,200,0.05); }
+    .setup-cta {
+      width: 100%; padding: 15px;
+      background: linear-gradient(135deg, var(--mint2), var(--mint));
+      border-radius: var(--r-sm); border: none;
+      font-size: 16px; font-weight: 800; color: #06060e;
+      cursor: pointer; letter-spacing: -0.2px;
+      box-shadow: 0 4px 24px rgba(62,255,200,0.25);
+    }
+    .setup-hint { font-size: 11px; color: var(--text3); }
+
+    /* Messages */
+    .chat-msgs {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 16px 14px 10px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .chat-msgs::-webkit-scrollbar { display: none; }
+
+    .msg { display: flex; flex-direction: column; max-width: 82%; }
     .msg.user { align-self: flex-end; align-items: flex-end; }
-    .msg.ai { align-self: flex-start; align-items: flex-start; }
-    .msg-bubble { padding: 11px 14px; border-radius: 18px; font-size: 14.5px; line-height: 1.5; }
-    .msg.user .msg-bubble { background: var(--mint); color: #0a0a0f; border-bottom-right-radius: 5px; font-weight: 500; }
-    .msg.ai .msg-bubble { background: var(--card); border: 1px solid var(--border); color: var(--text); border-bottom-left-radius: 5px; }
-    .msg-time { font-size: 10px; color: var(--muted); padding: 0 4px; }
-    .chat-typing { align-self: flex-start; }
-    .chat-typing .msg-bubble { display: flex; gap: 5px; align-items: center; padding: 14px 16px; }
-    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted2); animation: bounce 1.2s infinite; }
+    .msg.ai   { align-self: flex-start; align-items: flex-start; }
+    .msg-img  { max-width: 200px; border-radius: 16px; margin-bottom: 4px; border: 1px solid var(--border); }
+    .msg-bub  {
+      padding: 11px 15px;
+      border-radius: 20px;
+      font-size: 15px; line-height: 1.5;
+      word-break: break-word;
+    }
+    .msg.user .msg-bub {
+      background: linear-gradient(135deg, var(--mint2), var(--mint));
+      color: #06060e;
+      border-bottom-right-radius: 5px;
+      font-weight: 500;
+      box-shadow: 0 2px 12px rgba(62,255,200,0.2);
+    }
+    .msg.ai .msg-bub {
+      background: var(--glass2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-bottom-left-radius: 5px;
+      backdrop-filter: blur(10px);
+    }
+    .msg-ts { font-size: 10px; color: var(--text3); padding: 3px 5px; font-weight: 500; }
+
+    /* Typing */
+    .typing-ind { align-self: flex-start; }
+    .typing-ind .msg-bub { display: flex; gap: 5px; align-items: center; padding: 14px 16px; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text3); animation: pulse 1.2s ease-in-out infinite; }
     .dot:nth-child(2) { animation-delay: 0.2s; }
     .dot:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes bounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-5px); } }
-    .img-preview-bar { padding: 8px 14px 0; display: none; }
-    .img-preview-bar.has-img { display: block; }
-    .img-preview-wrap { position: relative; display: inline-block; }
-    .img-preview-wrap img { width: 64px; height: 64px; object-fit: cover; border-radius: 10px; border: 1px solid var(--border); }
-    .img-remove-btn { position: absolute; top: -6px; right: -6px; width: 18px; height: 18px; border-radius: 50%; background: var(--danger); border: none; color: #fff; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; }
-    .msg-img { max-width: 200px; border-radius: 12px; margin-bottom: 4px; border: 1px solid var(--border); }
-    .chat-input-bar { flex-shrink: 0; display: flex; gap: 8px; align-items: flex-end; padding: 10px 14px; padding-bottom: max(env(safe-area-inset-bottom), 14px); background: var(--surface); border-top: 1px solid var(--border); }
-    .chat-input-bar textarea { flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 10px 14px; font-size: 15px; color: var(--text); font-family: inherit; outline: none; resize: none; max-height: 100px; line-height: 1.4; }
-    .chat-input-bar textarea:focus { border-color: var(--mint-glow); }
-    .img-btn { width: 38px; height: 38px; border-radius: 50%; background: var(--card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; font-size: 18px; transition: opacity 0.15s; }
-    .send-btn { width: 38px; height: 38px; border-radius: 50%; background: var(--mint); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; font-size: 16px; color: #0a0a0f; transition: opacity 0.15s; }
-    .send-btn:disabled { opacity: 0.3; }
-    .chat-key-bar { display: flex; justify-content: flex-end; padding: 0 16px 4px; }
-    .reset-key-btn { font-size: 11px; color: var(--muted); background: none; border: none; cursor: pointer; padding: 4px; }
+    @keyframes pulse { 0%,60%,100% { transform: translateY(0); opacity: 0.5; } 30% { transform: translateY(-6px); opacity: 1; } }
 
-    /* ── COMPLETION MSG ── */
-    .done-banner { background: var(--mint-dim); border: 1px solid var(--mint-glow); border-radius: var(--radius-sm); padding: 12px 16px; display: flex; align-items: center; gap: 10px; margin: 0 16px 20px; }
-    .done-banner-text { font-size: 14px; font-weight: 600; color: var(--mint); }
-    .done-banner-sub { font-size: 12px; color: var(--muted2); }
+    /* Img preview */
+    .img-prev-bar { flex-shrink: 0; padding: 8px 14px 0; display: none; }
+    .img-prev-bar.has-img { display: block; }
+    .img-prev-wrap { position: relative; display: inline-block; }
+    .img-prev-wrap img { width: 54px; height: 54px; object-fit: cover; border-radius: 10px; border: 1px solid var(--border); }
+    .img-rm-btn { position: absolute; top: -5px; right: -5px; width: 18px; height: 18px; border-radius: 50%; background: var(--danger); border: none; color: #fff; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+    /* Input bar */
+    .chat-input-bar {
+      flex-shrink: 0;
+      display: flex; align-items: flex-end; gap: 8px;
+      padding: 10px 12px;
+      padding-bottom: max(env(safe-area-inset-bottom), 12px);
+      background: rgba(6,6,14,0.9);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+    }
+    #chat-input {
+      flex: 1;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 11px 16px;
+      font-size: 15px; color: var(--text);
+      font-family: inherit; outline: none;
+      resize: none; max-height: 120px; line-height: 1.4;
+      transition: border-color 0.15s;
+    }
+    #chat-input:focus { border-color: rgba(62,255,200,0.25); }
+    #chat-input::placeholder { color: var(--text3); }
+    .cam-btn {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: none; border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0; font-size: 16px; color: var(--text2);
+      transition: border-color 0.15s;
+    }
+    .cam-btn:active { border-color: var(--border2); }
+    .send-btn {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--mint2), var(--mint));
+      border: none;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0; font-size: 17px; color: #06060e;
+      font-weight: 700;
+      transition: opacity 0.15s, box-shadow 0.15s;
+      box-shadow: 0 2px 12px rgba(62,255,200,0.25);
+    }
+    .send-btn:disabled { opacity: 0.2; box-shadow: none; }
+    .send-btn:not(:disabled):active { opacity: 0.8; }
   </style>
 </head>
 <body>
 <div id="app">
 
-  <!-- ═══ TODAY TAB ═══ -->
+  <!-- TODAY -->
   <div class="screen hidden" id="screen-today">
     <div class="topbar">
       <div class="topbar-inner">
-        <h1>Good <span id="greeting-word">morning</span></h1>
-        <div class="streak-badge">🔥 <span id="streak-count">0</span> day streak</div>
+        <h1>Good <span class="accent" id="gword">morning</span></h1>
+        <div class="streak-pill">🔥 <span id="streak-n">0</span>d</div>
       </div>
     </div>
-
     <div class="progress-wrap">
       <div class="progress-header">
         <span class="progress-label">Today's habits</span>
-        <span class="progress-count"><span id="done-count">0</span> / <span id="total-count">0</span></span>
+        <span class="progress-count"><span id="done-n">0</span> / <span id="total-n">0</span></span>
       </div>
-      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      <div class="progress-track"><div class="progress-fill" id="pfill" style="width:0%"></div></div>
     </div>
-
     <div id="done-banner" class="done-banner hidden">
-      <span style="font-size:20px">✦</span>
-      <div>
-        <div class="done-banner-text">All done today.</div>
-        <div class="done-banner-sub">Consistency is the whole game.</div>
-      </div>
+      <div class="done-banner-icon">✦</div>
+      <div><div class="done-banner-text">All done.</div><div class="done-banner-sub">Consistency is the whole game.</div></div>
     </div>
-
-    <div class="section">
-      <div class="section-title">Morning</div>
-      <div class="card" id="habits-morning"></div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Anytime</div>
-      <div class="card" id="habits-anytime"></div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Night</div>
-      <div class="card" id="habits-night"></div>
-    </div>
+    <div class="section"><div class="section-label">Morning</div><div class="card" id="h-morning"></div></div>
+    <div class="section"><div class="section-label">Anytime</div><div class="card" id="h-anytime"></div></div>
+    <div class="section"><div class="section-label">Night</div><div class="card" id="h-night"></div></div>
   </div>
 
-  <!-- ═══ LOOKS TAB ═══ -->
+  <!-- LOOKS -->
   <div class="screen hidden" id="screen-looks">
-    <div class="topbar">
-      <div class="topbar-inner">
-        <h1>The <span>Science</span></h1>
-      </div>
-    </div>
-    <div class="cat-scroll" id="cat-scroll"></div>
+    <div class="topbar"><div class="topbar-inner"><h1>The <span class="accent">Science</span></h1></div></div>
+    <div class="cat-row" id="cat-row"></div>
     <div class="section" id="tips-list"></div>
   </div>
 
-  <!-- ═══ GOALS TAB ═══ -->
+  <!-- GOALS -->
   <div class="screen hidden" id="screen-goals">
-    <div class="topbar">
-      <div class="topbar-inner">
-        <h1>Short <span>Goals</span></h1>
-      </div>
-    </div>
+    <div class="topbar"><div class="topbar-inner"><h1>Short <span class="accent">Goals</span></h1></div></div>
     <div class="section" id="goals-list"></div>
-    <div class="section">
-      <button class="add-goal-btn" id="add-goal-btn">+ Add goal</button>
-    </div>
+    <div class="section"><button class="add-btn" id="add-goal-btn">+ New goal</button></div>
   </div>
 
-  <!-- ═══ CHAT TAB ═══ -->
-  <div class="screen hidden" id="screen-chat">
-    <div class="topbar" style="flex-shrink:0">
-      <div class="topbar-inner">
-        <h1><span>Ask</span> anything</h1>
-        <button class="reset-key-btn" id="reset-key-btn" style="display:none">change key</button>
-      </div>
-    </div>
-
-    <!-- Setup (no key yet) -->
-    <div class="chat-setup" id="chat-setup">
-      <div class="chat-setup-icon">◈</div>
-      <h2>Connect AI</h2>
-      <p>Paste your DeepInfra API key. Stored only on your phone. Supports text + images.</p>
-      <input type="password" id="api-key-input" placeholder="Your DeepInfra token...">
-      <button id="save-key-btn">Connect</button>
-      <p style="font-size:12px;color:var(--muted)">Get a key at deepinfra.com → Dashboard</p>
-    </div>
-
-    <!-- Chat UI (has key) -->
-    <div id="chat-ui" class="hidden" style="flex:1;display:flex;flex-direction:column;min-height:0">
-      <div class="chat-messages" id="chat-messages"></div>
-      <div class="img-preview-bar" id="img-preview-bar">
-        <div class="img-preview-wrap">
-          <img id="img-preview" src="" alt="preview">
-          <button class="img-remove-btn" id="img-remove-btn">✕</button>
-        </div>
-      </div>
-      <div class="chat-input-bar">
-        <button class="img-btn" id="img-btn">📷</button>
-        <input type="file" id="img-file-input" accept="image/*" style="display:none">
-        <textarea id="chat-input" rows="1" placeholder="Ask anything, send a photo..."></textarea>
-        <button class="send-btn" id="send-btn">↑</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══ STATS TAB ═══ -->
+  <!-- STATS -->
   <div class="screen hidden" id="screen-stats">
-    <div class="topbar">
-      <div class="topbar-inner">
-        <h1>Your <span>Stats</span></h1>
-      </div>
-    </div>
+    <div class="topbar"><div class="topbar-inner"><h1>Your <span class="accent">Stats</span></h1></div></div>
+    <div class="section"><div class="stat-grid" id="stat-grid"></div></div>
     <div class="section">
-      <div class="stat-grid" id="stat-grid"></div>
+      <div class="section-label">This week</div>
+      <div class="card" style="padding:14px"><div class="week-grid" id="week-grid"></div></div>
     </div>
-    <div class="section">
-      <div class="section-title">This week</div>
-      <div class="card" style="padding:16px">
-        <div class="week-grid" id="week-grid"></div>
-      </div>
-    </div>
-    <div class="section">
-      <div class="section-title">Habit completion — last 7 days</div>
-      <div id="habit-stats-list"></div>
-    </div>
+    <div class="section"><div class="section-label">Last 7 days</div><div id="habit-stats"></div></div>
   </div>
 
-  <!-- ═══ NAV ═══ -->
+  <!-- NAV -->
   <nav class="nav" id="nav">
-    <div class="nav-item active" data-tab="today">
-      <div class="nav-icon">◈</div>
-      <div class="nav-label">Today</div>
-    </div>
-    <div class="nav-item" data-tab="looks">
-      <div class="nav-icon">◉</div>
-      <div class="nav-label">Looks</div>
-    </div>
-    <div class="nav-item" data-tab="goals">
-      <div class="nav-icon">◎</div>
-      <div class="nav-label">Goals</div>
-    </div>
-    <div class="nav-item" data-tab="stats">
-      <div class="nav-icon">▣</div>
-      <div class="nav-label">Stats</div>
-    </div>
-    <div class="nav-item" data-tab="chat">
-      <div class="nav-icon">◇</div>
-      <div class="nav-label">Ask</div>
-    </div>
+    <div class="nav-item active" data-tab="today"><div class="nav-icon">◈</div><div class="nav-label">Today</div></div>
+    <div class="nav-item" data-tab="looks"><div class="nav-icon">◉</div><div class="nav-label">Looks</div></div>
+    <div class="nav-item" data-tab="goals"><div class="nav-icon">◎</div><div class="nav-label">Goals</div></div>
+    <div class="nav-item" data-tab="stats"><div class="nav-icon">▣</div><div class="nav-label">Stats</div></div>
+    <div class="nav-item" data-tab="chat"><div class="nav-icon">◇</div><div class="nav-label">Ask</div></div>
   </nav>
 </div>
 
-<!-- ═══ ADD GOAL MODAL ═══ -->
-<div class="modal-overlay" id="goal-modal">
-  <div class="modal">
-    <div class="modal-handle"></div>
+<!-- CHAT (outside app shell) -->
+<div id="chat-screen" class="hidden">
+  <div class="chat-bar">
+    <button class="chat-bar-back" id="chat-back">‹</button>
+    <div style="flex:1">
+      <div class="chat-bar-title">Mint AI</div>
+      <div class="chat-bar-sub">Llama 4 Maverick · Vision</div>
+    </div>
+    <button class="chat-bar-reset" id="chat-reset">change key</button>
+  </div>
+
+  <div class="chat-setup" id="chat-setup">
+    <div class="setup-orb">◈</div>
+    <h2>Connect AI</h2>
+    <p>Paste your DeepInfra token. Stays on your phone only — never stored anywhere else.</p>
+    <input class="setup-input" type="password" id="key-input" placeholder="DeepInfra token...">
+    <button class="setup-cta" id="key-save">Connect</button>
+    <span class="setup-hint">deepinfra.com → Dashboard</span>
+  </div>
+
+  <div id="chat-ui" class="hidden" style="flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden">
+    <div class="chat-msgs" id="chat-msgs"></div>
+    <div class="img-prev-bar" id="img-prev-bar">
+      <div class="img-prev-wrap">
+        <img id="img-prev" src="" alt="">
+        <button class="img-rm-btn" id="img-rm">✕</button>
+      </div>
+    </div>
+    <div class="chat-input-bar">
+      <button class="cam-btn" id="cam-btn">📷</button>
+      <input type="file" id="img-input" accept="image/*" style="display:none">
+      <textarea id="chat-input" rows="1" placeholder="Message..."></textarea>
+      <button class="send-btn" id="send-btn" disabled>↑</button>
+    </div>
+  </div>
+</div>
+
+<!-- GOAL MODAL -->
+<div class="overlay" id="goal-overlay">
+  <div class="modal-sheet">
+    <div class="sheet-handle"></div>
     <h2>New goal</h2>
-    <div class="input-group">
-      <label>Title</label>
-      <input type="text" id="goal-title-input" placeholder="e.g. Clear skin by month end">
-    </div>
-    <div class="input-group">
-      <label>Description</label>
-      <textarea id="goal-desc-input" rows="2" placeholder="What does winning look like?"></textarea>
-    </div>
-    <div class="input-group">
-      <label>Deadline</label>
-      <input type="date" id="goal-date-input">
-    </div>
-    <div class="input-group">
-      <label>Milestones (one per line)</label>
-      <textarea id="goal-miles-input" rows="4" placeholder="Week 1: Start SPF daily&#10;Week 2: Add retinol&#10;Week 3: No new breakouts&#10;Week 4: Skin looks visibly better"></textarea>
-    </div>
-    <button class="modal-btn" id="save-goal-btn">Save goal</button>
+    <div class="field"><label>Title</label><input type="text" id="g-title" placeholder="e.g. Clear skin by month end"></div>
+    <div class="field"><label>Description</label><textarea id="g-desc" rows="2" placeholder="What does winning look like?"></textarea></div>
+    <div class="field"><label>Deadline</label><input type="date" id="g-date"></div>
+    <div class="field"><label>Milestones — one per line</label><textarea id="g-miles" rows="4" placeholder="Week 1: Start SPF daily&#10;Week 2: Add retinol"></textarea></div>
+    <button class="modal-cta" id="g-save">Save goal</button>
   </div>
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════
-// DATA
-// ═══════════════════════════════════════════════════
-
+// ═══ DATA ═══
 const HABITS = [
-  // Morning
-  { id: 'spf',       name: 'Apply SPF 30+',         sub: 'Single biggest anti-aging move',      group: 'morning', streakKey: 'spf' },
-  { id: 'cleanser',  name: 'Morning cleanse',        sub: 'Remove overnight sebum + bacteria',   group: 'morning', streakKey: 'cleanser' },
-  { id: 'vit-c',     name: 'Vitamin C serum',        sub: 'Brightens, protects from UV damage',  group: 'morning', streakKey: 'vit-c' },
-  { id: 'moistam',   name: 'Moisturize (AM)',         sub: 'Lock in barrier, reduce TEWL',        group: 'morning', streakKey: 'moistam' },
-  { id: 'groom',     name: 'Groom yourself',          sub: 'Hair, face, look intentional',        group: 'morning', streakKey: 'groom' },
-  // Anytime
-  { id: 'water',     name: 'Drink 2L+ water',        sub: 'Skin plumpness + elasticity',         group: 'anytime', streakKey: 'water' },
-  { id: 'exercise',  name: 'Move for 30min+',        sub: 'Boosts blood flow to skin, posture',  group: 'anytime', streakKey: 'exercise' },
-  { id: 'posture',   name: 'Check your posture',     sub: 'Tall = dominant + attractive',        group: 'anytime', streakKey: 'posture' },
-  { id: 'nutrition', name: 'Eat whole, clean food',  sub: 'Omega-3s, antioxidants, less sugar',  group: 'anytime', streakKey: 'nutrition' },
-  // Night
-  { id: 'cleanse2',  name: 'Double cleanse',         sub: 'Oil then water cleanser at night',    group: 'night', streakKey: 'cleanse2' },
-  { id: 'retinol',   name: 'Retinol / Retinoid',     sub: '3-4x/week — strongest topical fix',  group: 'night', streakKey: 'retinol' },
-  { id: 'moistpm',   name: 'Moisturize (PM)',         sub: 'Skin repairs itself overnight',       group: 'night', streakKey: 'moistpm' },
-  { id: 'sleep',     name: 'Sleep 7–9 hours',        sub: 'Sleep-deprived = rated less attractive', group: 'night', streakKey: 'sleep' },
+  {id:'spf',      name:'Apply SPF 30+',    sub:'Biggest anti-aging move, no contest',    g:'morning'},
+  {id:'cleanse1', name:'Morning cleanse',  sub:'Remove overnight sebum + bacteria',      g:'morning'},
+  {id:'vitc',     name:'Vitamin C serum',  sub:'Brightens + UV protection synergy',      g:'morning'},
+  {id:'moist1',   name:'Moisturize',       sub:'Lock in barrier, reduce water loss',      g:'morning'},
+  {id:'groom',    name:'Groom',            sub:'Hair, face — look intentional',           g:'morning'},
+  {id:'water',    name:'2L+ water',        sub:'Skin plumpness + elasticity',             g:'anytime'},
+  {id:'exercise', name:'Move 30min+',      sub:'Blood flow, posture, physique',           g:'anytime'},
+  {id:'posture',  name:'Posture check',    sub:'Standing tall is immediately attractive', g:'anytime'},
+  {id:'eat',      name:'Eat clean',        sub:'Omega-3s, antioxidants, cut sugar',       g:'anytime'},
+  {id:'cleanse2', name:'Double cleanse',   sub:'Oil then water cleanser at night',        g:'night'},
+  {id:'retinol',  name:'Retinol',          sub:'3–4x/week — strongest topical fix',       g:'night'},
+  {id:'moist2',   name:'Moisturize (PM)',  sub:'Skin repairs itself overnight',           g:'night'},
+  {id:'sleep',    name:'7–9h sleep',       sub:'Sleep-deprived faces are rated worse',    g:'night'},
 ];
 
 const TIPS = [
-  // SKIN
-  {
-    id: 't1', cat: 'Skin', icon: '☀️', title: 'Wear SPF every single day',
-    evidence: 'Strong', time: 'Years of damage prevented',
-    body: `UV radiation is the #1 cause of visible aging — wrinkles, dark spots, loss of elasticity. A landmark 2013 RCT in Annals of Internal Medicine showed daily SPF users had 24% less skin aging vs. discretionary users over 4.5 years. Use SPF 30+ every morning, even indoors near windows. Reapply if outside. This is non-negotiable.`
-  },
-  {
-    id: 't2', cat: 'Skin', icon: '🔬', title: 'Use retinol or a retinoid',
-    evidence: 'Very Strong', time: '12–16 weeks',
-    body: `Retinoids are the most clinically studied topical ingredient for anti-aging and acne. They increase cell turnover, stimulate collagen synthesis, and reduce hyperpigmentation. Multiple double-blind studies confirm efficacy. Start 2–3x/week at night (0.025–0.1% retinol), build tolerance slowly. Always follow with moisturizer. Avoid in AM (degrades in sunlight) and always wear SPF.`
-  },
-  {
-    id: 't3', cat: 'Skin', icon: '🍊', title: 'Apply Vitamin C serum (AM)',
-    evidence: 'Strong', time: '4–8 weeks',
-    body: `L-ascorbic acid (Vitamin C) is a powerful antioxidant that neutralizes UV-induced free radicals, brightens skin tone, and boosts collagen. Studies show it reduces hyperpigmentation and improves overall radiance. Use 10–20% L-ascorbic acid in the morning before SPF for synergistic photoprotection. Store in cool/dark place — discard if it turns orange/brown.`
-  },
-  {
-    id: 't4', cat: 'Skin', icon: '🧴', title: 'Moisturize with ceramides',
-    evidence: 'Strong', time: '1–2 weeks',
-    body: `Ceramides make up 50% of your skin barrier. When depleted, water escapes (TEWL) and skin looks dull, flaky, and inflamed. Ceramide-containing moisturizers significantly restore barrier function. Apply AM and PM after active ingredients. Especially important after retinol or exfoliants. Look for: ceramide NP, AP, EOP in the ingredients.`
-  },
-  {
-    id: 't5', cat: 'Skin', icon: '🔷', title: 'Niacinamide reduces pores & tone',
-    evidence: 'Strong', time: '4–8 weeks',
-    body: `Niacinamide (Vitamin B3) at 4–5% concentration reduces sebum production, minimizes pore appearance, fades hyperpigmentation, and strengthens the skin barrier. Multiple clinical trials show significant improvements. It's gentle enough for daily use, works in AM or PM, and pairs well with most ingredients including retinol. One of the safest high-impact ingredients.`
-  },
-  // SLEEP
-  {
-    id: 't6', cat: 'Sleep', icon: '🌙', title: '7–9 hours makes you look better — literally',
-    evidence: 'Very Strong', time: 'Days',
-    body: `A 2010 study (Axelsson et al., BMJ) had raters judge faces of sleep-deprived vs. rested people blind — sleep-deprived faces were consistently rated as less healthy, less attractive, and more tired. Sleep is when skin repairs collagen, regulates cortisol, and reduces inflammation. Chronic poor sleep increases cortisol — which breaks down collagen and causes breakouts. Fix this first before any product.`
-  },
-  {
-    id: 't7', cat: 'Sleep', icon: '⏰', title: 'Consistent sleep schedule matters',
-    evidence: 'Strong', time: '1–2 weeks',
-    body: `It's not just about hours — timing matters. Your circadian rhythm controls cortisol, melatonin, and cellular repair cycles. Going to bed and waking at the same time daily (±30 min), even weekends, anchors your rhythm. This improves sleep quality measurably. Poor circadian rhythm is linked to worse skin, weight gain, and mood dysregulation — all of which affect your appearance.`
-  },
-  // FITNESS
-  {
-    id: 't8', cat: 'Fitness', icon: '💪', title: 'Resistance training for attractiveness',
-    evidence: 'Very Strong', time: '8–12 weeks visible',
-    body: `Multiple studies show that muscular physique is consistently rated as most attractive by both sexes. Specifically, shoulder-to-waist ratio (V-taper) is the strongest physical predictor of male attractiveness (Singh & Young 1995, multiple replications). Aim for 3–4x/week compound lifts (bench, row, OHP, squat, deadlift). Shoulders + lats are the highest ROI for visual appearance.`
-  },
-  {
-    id: 't9', cat: 'Fitness', icon: '🏃', title: 'Cardio improves your skin',
-    evidence: 'Moderate', time: '4–8 weeks',
-    body: `Aerobic exercise increases blood flow to skin, delivering oxygen and nutrients while clearing cellular waste — this directly improves skin appearance. A 2014 McMaster University study found active adults had significantly younger-looking skin histologically. 150 min/week of moderate cardio is the evidence-based recommendation. Even 20 min walks daily make a measurable difference.`
-  },
-  {
-    id: 't10', cat: 'Fitness', icon: '🧍', title: 'Fix your posture — it changes how people see you',
-    evidence: 'Strong', time: 'Immediate',
-    body: `Multiple studies show upright posture is rated as significantly more dominant, confident, and attractive. Slumped posture compresses your frame and signals low status. Aim for: ears over shoulders, shoulders over hips, chin parallel to floor. Consistent reminders + strengthen posterior chain (rows, face pulls, hip hinges). Effect is immediate — people perceive you differently the moment you stand taller.`
-  },
-  // NUTRITION
-  {
-    id: 't11', cat: 'Nutrition', icon: '🐟', title: 'Omega-3s for skin hydration',
-    evidence: 'Strong', time: '6–12 weeks',
-    body: `Omega-3 fatty acids (EPA/DHA) are incorporated into cell membranes and reduce systemic inflammation. Multiple RCTs show omega-3 supplementation improves skin hydration, reduces transepidermal water loss, and decreases inflammatory acne. Aim for 2–3g EPA+DHA/day from fatty fish (salmon, mackerel, sardines) or quality fish oil. This also reduces the cortisol response to stress, indirectly improving skin.`
-  },
-  {
-    id: 't12', cat: 'Nutrition', icon: '🫐', title: 'Cut sugar to protect your collagen',
-    evidence: 'Moderate–Strong', time: '4–8 weeks',
-    body: `Glycation is a process where excess glucose bonds to collagen fibers, making them stiff, cross-linked, and brittle — causing wrinkles and dull skin. High glycemic diets are independently associated with acne severity (multiple studies). Reducing added sugars and high-GI carbs directly protects your skin's structural integrity. Swap refined carbs for whole foods, reduce alcohol — glycation is real and cumulative.`
-  },
-  {
-    id: 't13', cat: 'Nutrition', icon: '💧', title: 'Hydration is visible on your face',
-    evidence: 'Moderate', time: 'Days',
-    body: `Even mild dehydration (1–2% body weight) reduces skin elasticity and makes fine lines more pronounced. Studies measuring skin elasticity show measurable improvements with adequate hydration. Aim for ~2–2.5L water/day minimum, more if exercising. Note: coffee/tea count, but alcohol is dehydrating. Humectant ingredients like hyaluronic acid in skincare work synergistically with internal hydration.`
-  },
-  // GROOMING
-  {
-    id: 't14', cat: 'Grooming', icon: '✂️', title: 'Haircut every 4–6 weeks',
-    evidence: 'Social consensus', time: 'Immediate',
-    body: `Your hair is one of the first things people notice. Growing out, shapeless hair signals neglect. A fresh cut signals you take care of yourself — this alone is one of the highest-ROI grooming moves. Find a style that suits your face shape (oval: anything works; round: add height; square: softer sides) and go to a real barber/stylist. Don't wait until it's clearly overgrown. The 4-6 week mark is when cuts start losing shape.`
-  },
-  {
-    id: 't15', cat: 'Grooming', icon: '🪒', title: 'Groom your eyebrows',
-    evidence: 'Research-backed', time: 'Immediate',
-    body: `Eyes are the most important facial feature for attractiveness, and eyebrows frame the eyes. A 2019 study (Sadr & Sadr) found that eyebrows had greater impact on face recognition than eyes — meaning they're heavily processed features. Unkempt eyebrows (overgrown, unibrow, asymmetrical) significantly reduce facial attractiveness ratings. You don't need to dramatically reshape — just clean up the unibrow and stray hairs, and tame bushy areas. Takes 5 minutes.`
-  },
-  {
-    id: 't16', cat: 'Grooming', icon: '🦷', title: 'White teeth signal health',
-    evidence: 'Moderate', time: '2–4 weeks',
-    body: `Multiple studies show whiter teeth are rated as significantly more attractive and correlated with perceived health and success (Kershaw et al. 2008). Staining from coffee, tea, and certain foods accumulates over time. Consistent whitening (strips, professional treatment) + daily brushing + floss is the baseline. An electric toothbrush removes significantly more plaque than manual brushing. This is a legitimately underrated appearance upgrade.`
-  },
-  // STYLE
-  {
-    id: 't17', cat: 'Style', icon: '👕', title: 'Fit > brand, always',
-    evidence: 'Consensus + studies', time: 'Immediate',
-    body: `Research on clothing and attractiveness consistently shows that fit is the primary driver of how clothing affects perceived attractiveness — not brand or price. Clothes that fit your frame (shoulders seam at shoulder, no excess fabric in torso, trousers break at top of shoe) make you look put-together regardless of cost. Get basics tailored if needed — it costs less than buying new clothes and looks far better.`
-  },
-  {
-    id: 't18', cat: 'Style', icon: '🎨', title: 'Wear colors that suit your skin tone',
-    evidence: 'Color theory + moderate research', time: 'Immediate',
-    body: `Wearing colors that complement your skin tone makes your complexion look healthier and more vibrant. Research shows that color harmony affects perceived health. For warm tones (olive, golden): earth tones, olive, warm neutrals. For cool tones (pink, blue undertones): navy, grey, cool whites, blues. Wearing clashing colors can make your skin look sallow or washed out. Start with clothing near your face (tops, hoodies).`
-  },
+  {id:'t1',  cat:'Skin',      icon:'☀️', title:'SPF every single day',                 ev:'Very Strong', time:'Years of aging prevented',   body:`UV is the #1 cause of visible aging. A 2013 RCT in Annals of Internal Medicine showed daily SPF users had 24% less skin aging over 4.5 years vs. discretionary users. SPF 30+ every morning, even indoors near windows. Single most impactful skincare step, period.`},
+  {id:'t2',  cat:'Skin',      icon:'🔬', title:'Retinol — the most studied topical',   ev:'Very Strong', time:'12–16 weeks',                body:`Retinoids are the most clinically proven topical for anti-aging and acne. They increase cell turnover, stimulate collagen synthesis, and fade hyperpigmentation. Multiple double-blind trials confirm it. Start 0.025–0.1% retinol 2–3x/week at night. Always follow with moisturizer. Always wear SPF AM.`},
+  {id:'t3',  cat:'Skin',      icon:'🍊', title:'Vitamin C in the morning',             ev:'Strong',      time:'4–8 weeks',                  body:`L-ascorbic acid neutralizes UV free radicals, brightens skin tone, and boosts collagen production. Apply 10–15% in AM before SPF — they work synergistically for UV protection. Store away from light. Discard if it turns orange.`},
+  {id:'t4',  cat:'Skin',      icon:'🧴', title:'Moisturizer with ceramides',           ev:'Strong',      time:'1–2 weeks',                  body:`Ceramides make up 50% of your skin barrier. When depleted, water escapes (TEWL) and skin looks dull and inflamed. Apply AM and PM after actives. Critical after retinol use. Look for: ceramide NP, AP, EOP on the ingredient list.`},
+  {id:'t5',  cat:'Skin',      icon:'🔷', title:'Niacinamide — pores and tone',         ev:'Strong',      time:'4–8 weeks',                  body:`4–5% niacinamide reduces sebum production, minimizes pore appearance, fades hyperpigmentation, and strengthens barrier. Multiple clinical trials confirm efficacy. Gentle for daily use AM or PM, pairs well with almost everything.`},
+  {id:'t6',  cat:'Sleep',     icon:'🌙', title:'7–9 hours makes you look better',      ev:'Very Strong', time:'Days',                       body:`A 2010 BMJ study had raters blindly judge sleep-deprived vs. rested faces — sleep-deprived rated consistently less healthy and attractive. Sleep is when cortisol regulates and skin repairs collagen. Chronic poor sleep breaks down collagen and causes breakouts. Fix this before buying any product.`},
+  {id:'t7',  cat:'Sleep',     icon:'⏰', title:'Consistent sleep timing matters',      ev:'Strong',      time:'1–2 weeks',                  body:`Hours aren't enough — timing matters. Your circadian rhythm controls cortisol, melatonin, and cellular repair cycles. Same sleep/wake time (±30 min) daily anchors your rhythm and measurably improves sleep quality. Irregular schedules linked to worse skin, weight gain, and mood issues.`},
+  {id:'t8',  cat:'Fitness',   icon:'💪', title:'Resistance training for your frame',   ev:'Very Strong', time:'8–12 weeks visible',         body:`Muscular physique is consistently rated most attractive. Shoulder-to-waist ratio (V-taper) is the strongest physical predictor of male attractiveness (Singh & Young 1995, widely replicated). 3–4x/week compound lifts. Shoulders + lats = highest visual ROI.`},
+  {id:'t9',  cat:'Fitness',   icon:'🏃', title:'Cardio improves your skin',            ev:'Moderate',    time:'4–8 weeks',                  body:`Aerobic exercise increases blood flow to skin — oxygen in, waste out — directly improving appearance. A 2014 McMaster University study found active adults had significantly younger-looking skin histologically. 150 min/week moderate cardio is the evidence base.`},
+  {id:'t10', cat:'Fitness',   icon:'🧍', title:'Posture changes how people see you',   ev:'Strong',      time:'Immediate',                  body:`Upright posture is rated significantly more dominant, confident, and attractive across multiple studies. Slumped posture compresses your frame and signals low status. The effect is immediate — people perceive you differently the moment you stand taller.`},
+  {id:'t11', cat:'Nutrition', icon:'🐟', title:'Omega-3s for skin and inflammation',   ev:'Strong',      time:'6–12 weeks',                 body:`Omega-3s (EPA/DHA) reduce systemic inflammation and improve skin hydration and elasticity. Multiple RCTs confirm improvements in TEWL and inflammatory acne. 2–3g EPA+DHA/day from fatty fish or quality fish oil. Also reduces cortisol stress response — double benefit.`},
+  {id:'t12', cat:'Nutrition', icon:'🍬', title:'Sugar destroys your collagen',         ev:'Moderate–Strong',time:'4–8 weeks',             body:`Glycation bonds excess glucose to collagen fibers, making them rigid and brittle — causing wrinkles and dull skin. High glycemic diets independently linked to acne severity. Cut added sugars, refined carbs, and alcohol. Glycation is slow and cumulative.`},
+  {id:'t13', cat:'Nutrition', icon:'💧', title:'Hydration shows on your face',         ev:'Moderate',    time:'Days',                       body:`Even 1–2% dehydration reduces skin elasticity and makes fine lines more visible. Aim for 2–2.5L/day minimum. Coffee and tea count. Alcohol dehydrates. The effect on facial appearance is real and relatively quick.`},
+  {id:'t14', cat:'Grooming',  icon:'✂️', title:'Get a haircut every 4–6 weeks',       ev:'Consensus',   time:'Immediate',                  body:`Fresh cut signals you take care of yourself. Cuts lose shape by week 4–6. Don't wait until it's clearly overgrown. This is one of the highest ROI grooming moves. Find what suits your face shape and maintain it consistently.`},
+  {id:'t15', cat:'Grooming',  icon:'👁', title:'Groom your eyebrows',                  ev:'Research-backed',time:'Immediate',            body:`Eyebrows frame the eyes — the most processed facial feature. A 2019 study found eyebrows have greater impact on face recognition than the eyes themselves. Clean up the unibrow and stray hairs at minimum. Unkempt eyebrows measurably reduce attractiveness ratings.`},
+  {id:'t16', cat:'Grooming',  icon:'🦷', title:'White teeth signal health',            ev:'Moderate',    time:'2–4 weeks',                  body:`Studies show whiter teeth are rated more attractive and correlated with perceived health and success (Kershaw et al. 2008). Electric toothbrush removes significantly more plaque than manual. Whitening strips work for surface stains.`},
+  {id:'t17', cat:'Style',     icon:'👕', title:'Fit beats brand every time',           ev:'Consensus',   time:'Immediate',                  body:`Fit is the primary driver of how clothing affects attractiveness. Clothes that fit your frame — shoulders seam at shoulder, no excess torso fabric, trousers break at top of shoe — make you look put-together regardless of price. Get basics tailored if needed.`},
+  {id:'t18', cat:'Style',     icon:'🎨', title:'Colors that suit your undertone',      ev:'Color theory', time:'Immediate',                body:`Wearing colors that complement your skin undertone makes your complexion look healthier. Warm undertones (olive, golden): earth tones, warm neutrals. Cool undertones (pink, blue): navy, grey, cool whites. Clashing colors make skin look sallow or washed out.`},
 ];
+
+function daysFromNow(n) { const d=new Date(); d.setDate(d.getDate()+n); return d.toISOString().split('T')[0]; }
 
 const DEFAULT_GOALS = [
-  {
-    id: 'g1',
-    title: 'Establish a skin routine',
-    desc: 'Go from zero to consistent with a real evidence-based skincare routine.',
-    deadline: (() => { const d = new Date(); d.setDate(d.getDate() + 30); return d.toISOString().split('T')[0]; })(),
-    milestones: [
-      { text: 'Get SPF 30+, cleanser, and moisturizer', done: false },
-      { text: 'Apply SPF every morning for 7 days straight', done: false },
-      { text: 'Add Vitamin C serum in the morning', done: false },
-      { text: 'Introduce retinol 2x/week at night', done: false },
-      { text: 'Full routine locked in — morning + night', done: false },
-    ]
-  },
-  {
-    id: 'g2',
-    title: 'Fix my sleep schedule',
-    desc: 'Get 7–9 hours consistently at the same time. No exceptions for 2 weeks.',
-    deadline: (() => { const d = new Date(); d.setDate(d.getDate() + 14); return d.toISOString().split('T')[0]; })(),
-    milestones: [
-      { text: 'Pick a consistent wake time and stick to it', done: false },
-      { text: '3 days in a row of 7+ hours', done: false },
-      { text: '7 days in a row — full week', done: false },
-      { text: '14 days — new default', done: false },
-    ]
-  },
-  {
-    id: 'g3',
-    title: 'Build a real physique',
-    desc: 'Resistance train 3x/week for 2 months. V-taper focus: shoulders + back.',
-    deadline: (() => { const d = new Date(); d.setDate(d.getDate() + 60); return d.toISOString().split('T')[0]; })(),
-    milestones: [
-      { text: 'Join a gym / set up home workout space', done: false },
-      { text: 'Complete first full week (3 sessions)', done: false },
-      { text: '1 month consistent — 12+ sessions done', done: false },
-      { text: 'Visible shoulder/back development starting', done: false },
-      { text: '2 months in — physique shift is noticeable', done: false },
-    ]
-  }
+  {id:'g1',title:'Establish a skin routine',desc:'Zero to consistent — SPF, Vit C, retinol, moisturizer.',deadline:daysFromNow(30),milestones:[{text:'Get SPF 30+, cleanser, and moisturizer',done:false},{text:'Apply SPF every morning for 7 days',done:false},{text:'Add Vitamin C serum in AM',done:false},{text:'Introduce retinol 2x/week at night',done:false},{text:'Full routine locked — AM + PM',done:false}]},
+  {id:'g2',title:'Fix my sleep schedule',desc:'7–9 hours, consistent time. 2 weeks no exceptions.',deadline:daysFromNow(14),milestones:[{text:'Pick a consistent wake time',done:false},{text:'3 days in a row of 7+ hours',done:false},{text:'Full week — 7 days',done:false},{text:'2 weeks — new default',done:false}]},
+  {id:'g3',title:'Build a real physique',desc:'Resistance train 3x/week. V-taper focus: shoulders + back.',deadline:daysFromNow(60),milestones:[{text:'Join gym / set up space',done:false},{text:'First full week (3 sessions)',done:false},{text:'1 month — 12+ sessions done',done:false},{text:'Visible shoulder development starting',done:false},{text:'2 months — physique shift noticeable',done:false}]},
 ];
 
-// ═══════════════════════════════════════════════════
-// STATE
-// ═══════════════════════════════════════════════════
+// ═══ STATE ═══
+function todayKey(){ return new Date().toISOString().split('T')[0]; }
+let S = {
+  log:   JSON.parse(localStorage.getItem('m_log')   || '{}'),
+  str:   JSON.parse(localStorage.getItem('m_str')   || '{}'),
+  goals: JSON.parse(localStorage.getItem('m_goals') || 'null') || DEFAULT_GOALS,
+};
+function save(){ localStorage.setItem('m_log',JSON.stringify(S.log)); localStorage.setItem('m_str',JSON.stringify(S.str)); localStorage.setItem('m_goals',JSON.stringify(S.goals)); }
 
-function todayKey() { return new Date().toISOString().split('T')[0]; }
-
-function loadState() {
-  return {
-    habitLog:  JSON.parse(localStorage.getItem('mint_habitLog')  || '{}'),
-    streaks:   JSON.parse(localStorage.getItem('mint_streaks')   || '{}'),
-    goals:     JSON.parse(localStorage.getItem('mint_goals')     || 'null') || DEFAULT_GOALS,
-  };
+function ykey(){ const d=new Date(); d.setDate(d.getDate()-1); return d.toISOString().split('T')[0]; }
+function upStreak(id,done){
+  if(!done) return;
+  const t=todayKey(),y=ykey();
+  if(!S.str[id]) S.str[id]={count:0,last:''};
+  const s=S.str[id];
+  if(s.last===y) s.count++;
+  else if(s.last!==t) s.count=1;
+  s.last=t; save();
 }
-
-function saveState(state) {
-  localStorage.setItem('mint_habitLog',  JSON.stringify(state.habitLog));
-  localStorage.setItem('mint_streaks',   JSON.stringify(state.streaks));
-  localStorage.setItem('mint_goals',     JSON.stringify(state.goals));
-}
-
-let STATE = loadState();
-
-// ═══════════════════════════════════════════════════
-// STREAK LOGIC
-// ═══════════════════════════════════════════════════
-
-function getYesterdayKey() {
-  const d = new Date(); d.setDate(d.getDate() - 1);
-  return d.toISOString().split('T')[0];
-}
-
-function updateStreak(habitId, completed) {
-  const today = todayKey();
-  const yest  = getYesterdayKey();
-  const streaks = STATE.streaks;
-
-  if (completed) {
-    if (!streaks[habitId]) streaks[habitId] = { count: 0, lastDate: '' };
-    if (streaks[habitId].lastDate === yest) {
-      streaks[habitId].count += 1;
-    } else if (streaks[habitId].lastDate !== today) {
-      streaks[habitId].count = 1;
-    }
-    streaks[habitId].lastDate = today;
+function getStreak(id){ const s=S.str[id]; if(!s)return 0; const t=todayKey(),y=ykey(); return(s.last===t||s.last===y)?s.count:0; }
+function globalStreak(){
+  let n=0; const d=new Date();
+  for(let i=0;i<365;i++){
+    const k=d.toISOString().split('T')[0];
+    const log=S.log[k]||{};
+    const pct=HABITS.filter(h=>log[h.id]).length/HABITS.length;
+    if(pct>=0.5) n++;
+    else if(k!==todayKey()) break;
+    d.setDate(d.getDate()-1);
   }
-  saveState(STATE);
+  return n;
 }
 
-function getStreak(habitId) {
-  const s = STATE.streaks[habitId];
-  if (!s) return 0;
-  const today = todayKey();
-  const yest  = getYesterdayKey();
-  if (s.lastDate === today || s.lastDate === yest) return s.count;
-  return 0;
-}
-
-function getLongestStreak() {
-  return Math.max(0, ...Object.values(STATE.streaks).map(s => s.count || 0));
-}
-
-function getTodayStreakCount() {
-  // overall streak = how many days in a row ALL habits were completed
-  // simplified: days where at least 80% habits done
-  const today = todayKey();
-  let streak = 0;
-  const d = new Date();
-  for (let i = 0; i < 365; i++) {
-    const key = d.toISOString().split('T')[0];
-    const log = STATE.habitLog[key] || {};
-    const done = HABITS.filter(h => log[h.id]).length;
-    if (done / HABITS.length >= 0.5 || key === today) {
-      if (done / HABITS.length >= 0.5) streak++;
-      else if (key !== today) break;
-    } else { break; }
-    d.setDate(d.getDate() - 1);
-  }
-  return streak;
-}
-
-// ═══════════════════════════════════════════════════
-// RENDER: TODAY
-// ═══════════════════════════════════════════════════
-
-function renderToday() {
-  const today = todayKey();
-  const log = STATE.habitLog[today] || {};
-
-  // Greeting
-  const h = new Date().getHours();
-  document.getElementById('greeting-word').textContent =
-    h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
-
-  // Streak
-  document.getElementById('streak-count').textContent = getTodayStreakCount();
-
-  // Progress
-  const total = HABITS.length;
-  const done  = HABITS.filter(h => log[h.id]).length;
-  document.getElementById('done-count').textContent  = done;
-  document.getElementById('total-count').textContent = total;
-  document.getElementById('progress-fill').style.width = (done / total * 100) + '%';
-
-  const banner = document.getElementById('done-banner');
-  banner.classList.toggle('hidden', done < total);
-
-  // Render groups
-  ['morning', 'anytime', 'night'].forEach(group => {
-    const container = document.getElementById('habits-' + group);
-    container.innerHTML = '';
-    HABITS.filter(h => h.group === group).forEach(habit => {
-      const isDone = !!log[habit.id];
-      const streak = getStreak(habit.id);
-      const el = document.createElement('div');
-      el.className = 'habit-item' + (isDone ? ' done' : '');
-      el.dataset.id = habit.id;
-      el.innerHTML = `
-        <div class="habit-check"></div>
-        <div class="habit-info">
-          <div class="habit-name">${habit.name}</div>
-          <div class="habit-sub">${habit.sub}</div>
-        </div>
-        ${streak > 1 ? `<div class="habit-streak">🔥 ${streak}d</div>` : ''}
-      `;
-      el.addEventListener('click', () => toggleHabit(habit.id));
-      container.appendChild(el);
-    });
-  });
-}
-
-function toggleHabit(id) {
-  const today = todayKey();
-  if (!STATE.habitLog[today]) STATE.habitLog[today] = {};
-  const wasDone = STATE.habitLog[today][id];
-  STATE.habitLog[today][id] = !wasDone;
-  updateStreak(id, !wasDone);
-  saveState(STATE);
-  renderToday();
-}
-
-// ═══════════════════════════════════════════════════
-// RENDER: LOOKS
-// ═══════════════════════════════════════════════════
-
-let activeCategory = 'All';
-
-function renderLooks() {
-  const cats = ['All', ...new Set(TIPS.map(t => t.cat))];
-  const scroll = document.getElementById('cat-scroll');
-  scroll.innerHTML = '';
-  cats.forEach(cat => {
-    const el = document.createElement('div');
-    el.className = 'cat-pill' + (cat === activeCategory ? ' active' : '');
-    el.textContent = cat;
-    el.addEventListener('click', () => { activeCategory = cat; renderLooks(); });
-    scroll.appendChild(el);
-  });
-
-  const list = document.getElementById('tips-list');
-  list.innerHTML = '';
-  const filtered = activeCategory === 'All' ? TIPS : TIPS.filter(t => t.cat === activeCategory);
-  filtered.forEach(tip => {
-    const el = document.createElement('div');
-    el.className = 'tip-card';
-    el.innerHTML = `
-      <div class="tip-header">
-        <div class="tip-icon">${tip.icon}</div>
-        <div class="tip-meta">
-          <div class="tip-title">${tip.title}</div>
-          <div class="tip-tags">
-            <span class="tag tag-cat">${tip.cat}</span>
-            <span class="tag tag-evidence">Evidence: ${tip.evidence}</span>
-            <span class="tag tag-time">${tip.time}</span>
-          </div>
-        </div>
-        <div class="tip-arrow">▾</div>
-      </div>
-      <div class="tip-body">${tip.body}</div>
-    `;
-    el.addEventListener('click', () => {
-      el.classList.toggle('open');
-      el.querySelector('.tip-body').classList.toggle('open');
-    });
-    list.appendChild(el);
-  });
-}
-
-// ═══════════════════════════════════════════════════
-// RENDER: GOALS
-// ═══════════════════════════════════════════════════
-
-function renderGoals() {
-  const list = document.getElementById('goals-list');
-  list.innerHTML = '';
-
-  if (STATE.goals.length === 0) {
-    list.innerHTML = `<div class="empty"><div class="empty-icon">◎</div><p>No goals yet.<br>Add one below.</p></div>`;
-    return;
-  }
-
-  STATE.goals.forEach((goal, gi) => {
-    const total = goal.milestones.length;
-    const done  = goal.milestones.filter(m => m.done).length;
-    const pct   = total ? Math.round(done / total * 100) : 0;
-
-    const daysLeft = Math.ceil((new Date(goal.deadline) - new Date()) / 86400000);
-    const dueStr   = daysLeft > 0 ? `${daysLeft}d left` : daysLeft === 0 ? 'Due today' : 'Overdue';
-
-    const el = document.createElement('div');
-    el.className = 'goal-card';
-    el.innerHTML = `
-      <div class="goal-header">
-        <div class="goal-title">${goal.title}</div>
-        <div class="goal-deadline">${dueStr}</div>
-      </div>
-      <div class="goal-desc">${goal.desc}</div>
-      <div class="goal-milestones">
-        ${goal.milestones.map((m, mi) => `
-          <div class="milestone${m.done ? ' done' : ''}" data-gi="${gi}" data-mi="${mi}">
-            <div class="milestone-dot"></div>
-            <div class="milestone-text">${m.text}</div>
-          </div>
-        `).join('')}
-      </div>
-      <div class="goal-progress-wrap">
-        <div class="goal-pct">${pct}%</div>
-        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
-      </div>
-    `;
-
-    el.querySelectorAll('.milestone').forEach(mEl => {
-      mEl.addEventListener('click', (e) => {
-        const gi2 = +mEl.dataset.gi;
-        const mi2 = +mEl.dataset.mi;
-        STATE.goals[gi2].milestones[mi2].done = !STATE.goals[gi2].milestones[mi2].done;
-        saveState(STATE);
-        renderGoals();
+// ═══ TODAY ═══
+function renderToday(){
+  const t=todayKey(), log=S.log[t]||{};
+  const h=new Date().getHours();
+  document.getElementById('gword').textContent=h<12?'morning':h<17?'afternoon':'evening';
+  document.getElementById('streak-n').textContent=globalStreak();
+  const done=HABITS.filter(h=>log[h.id]).length;
+  document.getElementById('done-n').textContent=done;
+  document.getElementById('total-n').textContent=HABITS.length;
+  document.getElementById('pfill').style.width=(done/HABITS.length*100)+'%';
+  document.getElementById('done-banner').classList.toggle('hidden',done<HABITS.length);
+  ['morning','anytime','night'].forEach(g=>{
+    const el=document.getElementById('h-'+g); el.innerHTML='';
+    HABITS.filter(h=>h.g===g).forEach(habit=>{
+      const isDone=!!log[habit.id], streak=getStreak(habit.id);
+      const d=document.createElement('div');
+      d.className='habit-item'+(isDone?' done':'');
+      d.innerHTML=`<div class="habit-check"></div><div class="habit-info"><div class="habit-name">${habit.name}</div><div class="habit-sub">${habit.sub}</div></div>${streak>1?`<div class="streak-tag">🔥${streak}d</div>`:''}`;
+      d.addEventListener('click',()=>{
+        if(!S.log[t])S.log[t]={};
+        const was=S.log[t][habit.id];
+        S.log[t][habit.id]=!was;
+        upStreak(habit.id,!was); save(); renderToday();
       });
+      el.appendChild(d);
     });
+  });
+}
 
+// ═══ LOOKS ═══
+let aCat='All';
+function renderLooks(){
+  const cats=['All',...new Set(TIPS.map(t=>t.cat))];
+  const row=document.getElementById('cat-row'); row.innerHTML='';
+  cats.forEach(c=>{
+    const p=document.createElement('div');
+    p.className='cat-pill'+(c===aCat?' active':'');
+    p.textContent=c;
+    p.addEventListener('click',()=>{aCat=c;renderLooks();});
+    row.appendChild(p);
+  });
+  const list=document.getElementById('tips-list'); list.innerHTML='';
+  (aCat==='All'?TIPS:TIPS.filter(t=>t.cat===aCat)).forEach(tip=>{
+    const el=document.createElement('div');
+    el.className='tip-card';
+    el.innerHTML=`<div class="tip-header"><div class="tip-icon">${tip.icon}</div><div class="tip-meta"><div class="tip-title">${tip.title}</div><div class="tip-tags"><span class="tag tag-cat">${tip.cat}</span><span class="tag tag-ev">${tip.ev}</span><span class="tag tag-time">${tip.time}</span></div></div><div class="tip-arrow">▾</div></div><div class="tip-body">${tip.body}</div>`;
+    el.addEventListener('click',()=>{el.classList.toggle('open');el.querySelector('.tip-body').classList.toggle('open');});
     list.appendChild(el);
   });
 }
 
-// ═══════════════════════════════════════════════════
-// RENDER: STATS
-// ═══════════════════════════════════════════════════
-
-function renderStats() {
-  const today = todayKey();
-  const log = STATE.habitLog[today] || {};
-  const todayDone = HABITS.filter(h => log[h.id]).length;
-  const longestStreak = getLongestStreak();
-  const totalGoalDone = STATE.goals.reduce((a, g) => a + g.milestones.filter(m => m.done).length, 0);
-
-  // Count total habit completions ever
-  let totalCompletions = 0;
-  Object.values(STATE.habitLog).forEach(dayLog => {
-    totalCompletions += Object.values(dayLog).filter(Boolean).length;
-  });
-
-  document.getElementById('stat-grid').innerHTML = `
-    <div class="stat-card">
-      <div class="stat-val">${todayDone}</div>
-      <div class="stat-label">Done today</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-val">${getTodayStreakCount()}</div>
-      <div class="stat-label">Current streak</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-val">${longestStreak}</div>
-      <div class="stat-label">Longest streak</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-val">${totalCompletions}</div>
-      <div class="stat-label">Total check-ins</div>
-    </div>
-  `;
-
-  // Week grid
-  const weekGrid = document.getElementById('week-grid');
-  weekGrid.innerHTML = '';
-  const days = ['M','T','W','T','F','S','S'];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    const key = d.toISOString().split('T')[0];
-    const dayLog = STATE.habitLog[key] || {};
-    const done = HABITS.filter(h => dayLog[h.id]).length;
-    const isToday = key === today;
-    const filled = done >= HABITS.length * 0.5;
-    const div = document.createElement('div');
-    div.className = 'week-day' + (filled ? ' filled' : '') + (isToday ? ' today' : '');
-    div.innerHTML = `<div class="week-day-label">${days[6-i]}</div><div class="week-day-dot"></div>`;
-    weekGrid.appendChild(div);
-  }
-
-  // Per-habit stats
-  const hList = document.getElementById('habit-stats-list');
-  hList.innerHTML = '';
-  HABITS.forEach(habit => {
-    let count = 0;
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(); d.setDate(d.getDate() - i);
-      const key = d.toISOString().split('T')[0];
-      if (STATE.habitLog[key]?.[habit.id]) count++;
-    }
-    const pct = Math.round(count / 7 * 100);
-    const el = document.createElement('div');
-    el.className = 'card';
-    el.style.marginBottom = '8px';
-    el.innerHTML = `
-      <div style="padding:12px 14px">
-        <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13.5px">
-          <span>${habit.name}</span>
-          <span style="color:var(--mint);font-weight:600">${count}/7</span>
-        </div>
-        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
-      </div>
-    `;
-    hList.appendChild(el);
+// ═══ GOALS ═══
+function renderGoals(){
+  const list=document.getElementById('goals-list'); list.innerHTML='';
+  if(!S.goals.length){list.innerHTML='<div style="text-align:center;padding:40px 0;color:var(--text3)">No goals yet</div>';return;}
+  S.goals.forEach((goal,gi)=>{
+    const done=goal.milestones.filter(m=>m.done).length,tot=goal.milestones.length;
+    const pct=tot?Math.round(done/tot*100):0;
+    const dl=Math.ceil((new Date(goal.deadline)-new Date())/86400000);
+    const due=dl>0?`${dl}d left`:dl===0?'Due today':'Overdue';
+    const el=document.createElement('div'); el.className='goal-card';
+    el.innerHTML=`<div class="goal-header"><div class="goal-title">${goal.title}</div><div class="goal-due">${due}</div></div><div class="goal-desc">${goal.desc}</div><div class="goal-miles">${goal.milestones.map((m,mi)=>`<div class="milestone${m.done?' done':''}" data-gi="${gi}" data-mi="${mi}"><div class="m-dot"></div><div class="m-text">${m.text}</div></div>`).join('')}</div><div class="goal-footer"><div class="goal-pct">${pct}%</div><div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div></div>`;
+    el.querySelectorAll('.milestone').forEach(m=>m.addEventListener('click',()=>{S.goals[+m.dataset.gi].milestones[+m.dataset.mi].done^=true;save();renderGoals();}));
+    list.appendChild(el);
   });
 }
 
-// ═══════════════════════════════════════════════════
-// TABS
-// ═══════════════════════════════════════════════════
-
-let currentTab = 'today';
-const screens = { today: 'screen-today', looks: 'screen-looks', goals: 'screen-goals', stats: 'screen-stats', chat: 'screen-chat' };
-const renders  = { today: renderToday, looks: renderLooks, goals: renderGoals, stats: renderStats, chat: renderChat };
-
-function switchTab(tab) {
-  currentTab = tab;
-  Object.entries(screens).forEach(([t, id]) => {
-    document.getElementById(id).classList.toggle('hidden', t !== tab);
-  });
-  document.querySelectorAll('.nav-item').forEach(el => {
-    el.classList.toggle('active', el.dataset.tab === tab);
-  });
-  renders[tab]();
+// ═══ STATS ═══
+function renderStats(){
+  const t=todayKey(),log=S.log[t]||{};
+  const td=HABITS.filter(h=>log[h.id]).length;
+  const lng=Math.max(0,...Object.values(S.str).map(s=>s.count||0));
+  const total=Object.values(S.log).reduce((a,d)=>a+Object.values(d).filter(Boolean).length,0);
+  document.getElementById('stat-grid').innerHTML=[['',td,'Done today'],['',globalStreak(),'Current streak'],['',lng,'Longest streak'],['',total,'Total check-ins']].map(([,v,l])=>`<div class="stat-card"><div class="stat-val">${v}</div><div class="stat-label">${l}</div></div>`).join('');
+  const wg=document.getElementById('week-grid'); wg.innerHTML='';
+  const days=['M','T','W','T','F','S','S'];
+  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const k=d.toISOString().split('T')[0];const dl=S.log[k]||{};const dn=HABITS.filter(h=>dl[h.id]).length;const isT=k===t;const f=dn>=HABITS.length*0.5;const div=document.createElement('div');div.className='wday'+(f?' filled':'')+(isT?' today':'');div.innerHTML=`<div class="wday-label">${days[6-i]}</div><div class="wday-dot"></div>`;wg.appendChild(div);}
+  const hs=document.getElementById('habit-stats'); hs.innerHTML='';
+  HABITS.forEach(h=>{let c=0;for(let i=0;i<7;i++){const d=new Date();d.setDate(d.getDate()-i);if(S.log[d.toISOString().split('T')[0]]?.[h.id])c++;}const p=Math.round(c/7*100);const el=document.createElement('div');el.className='card';el.style.marginBottom='7px';el.innerHTML=`<div style="padding:12px 14px"><div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;font-weight:500"><span>${h.name}</span><span style="color:var(--mint);font-weight:700">${c}/7</span></div><div class="progress-track"><div class="progress-fill" style="width:${p}%"></div></div></div>`;hs.appendChild(el);});
 }
 
-document.getElementById('nav').addEventListener('click', e => {
-  const item = e.target.closest('.nav-item');
-  if (item) switchTab(item.dataset.tab);
-});
+// ═══ TABS ═══
+let tab='today';
+const tabMap={today:'screen-today',looks:'screen-looks',goals:'screen-goals',stats:'screen-stats'};
+const renderMap={today:renderToday,looks:renderLooks,goals:renderGoals,stats:renderStats};
+function switchTab(t){
+  if(t==='chat'){openChat();return;}
+  tab=t;
+  Object.entries(tabMap).forEach(([k,id])=>document.getElementById(id).classList.toggle('hidden',k!==t));
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.toggle('active',el.dataset.tab===t));
+  renderMap[t]();
+}
+document.getElementById('nav').addEventListener('click',e=>{const it=e.target.closest('.nav-item');if(it)switchTab(it.dataset.tab);});
 
-// ═══════════════════════════════════════════════════
-// ADD GOAL MODAL
-// ═══════════════════════════════════════════════════
+// ═══ CHAT ═══
+const MODEL='meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8';
+let hist=[], pendImg=null;
 
-const modal  = document.getElementById('goal-modal');
-const addBtn = document.getElementById('add-goal-btn');
-
-addBtn.addEventListener('click', () => {
-  document.getElementById('goal-title-input').value = '';
-  document.getElementById('goal-desc-input').value  = '';
-  document.getElementById('goal-miles-input').value = '';
-  const d = new Date(); d.setDate(d.getDate() + 30);
-  document.getElementById('goal-date-input').value  = d.toISOString().split('T')[0];
-  modal.classList.add('open');
-});
-
-modal.addEventListener('click', e => {
-  if (e.target === modal) modal.classList.remove('open');
-});
-
-document.getElementById('save-goal-btn').addEventListener('click', () => {
-  const title  = document.getElementById('goal-title-input').value.trim();
-  const desc   = document.getElementById('goal-desc-input').value.trim();
-  const date   = document.getElementById('goal-date-input').value;
-  const milRaw = document.getElementById('goal-miles-input').value.trim();
-
-  if (!title) { document.getElementById('goal-title-input').focus(); return; }
-
-  const milestones = milRaw
-    ? milRaw.split('\n').map(s => s.trim()).filter(Boolean).map(text => ({ text, done: false }))
-    : [];
-
-  STATE.goals.push({ id: 'g' + Date.now(), title, desc, deadline: date, milestones });
-  saveState(STATE);
-  modal.classList.remove('open');
-  renderGoals();
-});
-
-// ═══════════════════════════════════════════════════
-// CHAT  (DeepInfra · Llama 4 Maverick · vision)
-// ═══════════════════════════════════════════════════
-
-const DEEPINFRA_MODEL = 'meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8';
-let chatHistory = [];
-let pendingImageB64 = null; // base64 data URL of staged image
-
-function buildSystemPrompt() {
-  const today = todayKey();
-  const log = STATE.habitLog[today] || {};
-  const doneHabits    = HABITS.filter(h => log[h.id]).map(h => h.name);
-  const pendingHabits = HABITS.filter(h => !log[h.id]).map(h => h.name);
-  const streak = getTodayStreakCount();
-  const goalsSummary = STATE.goals.map(g => {
-    const done = g.milestones.filter(m => m.done).length;
-    return `"${g.title}" (${done}/${g.milestones.length} milestones, due ${g.deadline})`;
-  }).join(', ');
-
-  return `You are the AI assistant inside Mint — a personal improvement app focused on scientifically-backed looks, habits, and short-term goals. You know the user's live data:
-
-TODAY (${today}):
-- Habits completed: ${doneHabits.length ? doneHabits.join(', ') : 'none yet'}
-- Habits pending: ${pendingHabits.join(', ')}
-- Current streak: ${streak} days
-
-GOALS: ${goalsSummary || 'No goals set'}
-
-You support vision — the user can send photos (skin, hair, outfit, food, progress pics, etc). Analyze them directly and give real, specific feedback.
-
-Your role: Sharp, direct, knowledgeable coach. No fluff. Answer anything about looks, skincare, fitness, grooming, nutrition, style, habits, goals. Keep responses concise and actionable. Be real.`;
+function sysPrompt(){
+  const t=todayKey(),log=S.log[t]||{};
+  const done=HABITS.filter(h=>log[h.id]).map(h=>h.name);
+  const pend=HABITS.filter(h=>!log[h.id]).map(h=>h.name);
+  const goals=S.goals.map(g=>{const d=g.milestones.filter(m=>m.done).length;return`"${g.title}" ${d}/${g.milestones.length} done, due ${g.deadline}`;}).join(' | ');
+  return`You are the AI inside Mint — a personal app for looks, habits, and goals. User's live data:
+TODAY (${t}): Done: ${done.join(', ')||'nothing yet'}. Still pending: ${pend.join(', ')}.
+Streak: ${globalStreak()} days. Goals: ${goals||'none'}.
+You support vision — user can send photos (skin, hair, outfit, food, body, anything). Analyze them directly and give real, specific feedback.
+Be sharp, direct, no fluff. Concise and actionable. Real talk, no corporate wellness speak. Light roast if they're slacking.`;
 }
 
-function renderChat() {
-  const key = localStorage.getItem('mint_dikey');
-  const setup = document.getElementById('chat-setup');
-  const ui    = document.getElementById('chat-ui');
-  const resetBtn = document.getElementById('reset-key-btn');
-  if (key) {
-    setup.style.display = 'none';
-    ui.classList.remove('hidden');
-    ui.style.display = 'flex';
-    resetBtn.style.display = 'block';
-    if (chatHistory.length === 0) addWelcomeMessage();
+function openChat(){
+  tab='chat';
+  document.getElementById('chat-screen').classList.remove('hidden');
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.toggle('active',el.dataset.tab==='chat'));
+  const key=localStorage.getItem('m_key');
+  if(key){
+    document.getElementById('chat-setup').style.display='none';
+    const ui=document.getElementById('chat-ui');
+    ui.classList.remove('hidden'); ui.style.display='flex';
+    if(hist.length===0) welcomeMsg();
   } else {
-    setup.style.display = 'flex';
-    ui.classList.add('hidden');
-    resetBtn.style.display = 'none';
+    document.getElementById('chat-setup').style.display='flex';
+    document.getElementById('chat-ui').classList.add('hidden');
   }
+  adjustVP();
+}
+function closeChat(){ document.getElementById('chat-screen').classList.add('hidden'); switchTab('today'); }
+document.getElementById('chat-back').addEventListener('click',closeChat);
+
+function welcomeMsg(){
+  const t=todayKey(),log=S.log[t]||{};
+  const done=HABITS.filter(h=>log[h.id]).length;
+  const txt=`${done}/${HABITS.length} habits done today. What do you need?`;
+  addMsg('ai',txt); hist.push({role:'assistant',content:txt});
 }
 
-function addWelcomeMessage() {
-  const today = todayKey();
-  const log = STATE.habitLog[today] || {};
-  const done = HABITS.filter(h => log[h.id]).length;
-  const total = HABITS.length;
-  const text = `Connected — running Llama 4 Maverick with vision. ${done}/${total} habits done today.\n\nAsk me anything or send a photo — skin, hair, outfit, food, whatever.`;
-  appendMessage('ai', text);
-  chatHistory.push({ role: 'assistant', content: text });
+function ts(){ const n=new Date(); return n.getHours()+':'+String(n.getMinutes()).padStart(2,'0'); }
+
+function addMsg(role,text,img){
+  const msgs=document.getElementById('chat-msgs');
+  const d=document.createElement('div'); d.className=`msg ${role}`;
+  let h='';
+  if(img) h+=`<img class="msg-img" src="${img}">`;
+  if(text) h+=`<div class="msg-bub">${text.replace(/\n/g,'<br>')}</div>`;
+  h+=`<div class="msg-ts">${ts()}</div>`;
+  d.innerHTML=h; msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight;
 }
 
-function timeFmt() {
-  const n = new Date();
-  return n.getHours() + ':' + String(n.getMinutes()).padStart(2, '0');
+function showTyping(){
+  const msgs=document.getElementById('chat-msgs');
+  const d=document.createElement('div'); d.className='msg ai typing-ind'; d.id='typing';
+  d.innerHTML=`<div class="msg-bub"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+  msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight;
+}
+function hideTyping(){ document.getElementById('typing')?.remove(); }
+
+function clearImg(){
+  pendImg=null;
+  document.getElementById('img-prev-bar').classList.remove('has-img');
+  document.getElementById('img-prev').src='';
+  document.getElementById('img-input').value='';
 }
 
-function appendMessage(role, text, imgSrc) {
-  const msgs = document.getElementById('chat-messages');
-  const div = document.createElement('div');
-  div.className = `msg ${role}`;
-  let inner = '';
-  if (imgSrc) inner += `<img class="msg-img" src="${imgSrc}">`;
-  if (text)   inner += `<div class="msg-bubble">${text.replace(/\n/g, '<br>')}</div>`;
-  inner += `<div class="msg-time">${timeFmt()}</div>`;
-  div.innerHTML = inner;
-  msgs.appendChild(div);
-  msgs.scrollTop = msgs.scrollHeight;
-}
-
-function showTyping() {
-  const msgs = document.getElementById('chat-messages');
-  const div = document.createElement('div');
-  div.className = 'msg ai chat-typing';
-  div.id = 'typing-indicator';
-  div.innerHTML = `<div class="msg-bubble"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
-  msgs.appendChild(div);
-  msgs.scrollTop = msgs.scrollHeight;
-}
-
-function hideTyping() {
-  const el = document.getElementById('typing-indicator');
-  if (el) el.remove();
-}
-
-function clearImagePreview() {
-  pendingImageB64 = null;
-  document.getElementById('img-preview-bar').classList.remove('has-img');
-  document.getElementById('img-preview').src = '';
-  document.getElementById('img-file-input').value = '';
-}
-
-async function sendMessage() {
-  const input = document.getElementById('chat-input');
-  const btn   = document.getElementById('send-btn');
-  const text  = input.value.trim();
-  if (!text && !pendingImageB64) return;
-
-  const key = localStorage.getItem('mint_dikey');
-  if (!key) return;
-
-  const imgToSend = pendingImageB64;
-  input.value = '';
-  input.style.height = 'auto';
-  btn.disabled = true;
-  clearImagePreview();
-
-  // Build user content
-  appendMessage('user', text || null, imgToSend);
-
-  let userContent;
-  if (imgToSend) {
-    userContent = [
-      { type: 'image_url', image_url: { url: imgToSend } },
-      ...(text ? [{ type: 'text', text }] : [{ type: 'text', text: 'What do you think?' }])
-    ];
-  } else {
-    userContent = text;
-  }
-  chatHistory.push({ role: 'user', content: userContent });
-
+async function send(){
+  const inp=document.getElementById('chat-input');
+  const btn=document.getElementById('send-btn');
+  const txt=inp.value.trim();
+  if(!txt&&!pendImg) return;
+  const key=localStorage.getItem('m_key'); if(!key) return;
+  const img=pendImg;
+  inp.value=''; inp.style.height='auto'; btn.disabled=true; clearImg();
+  addMsg('user',txt||null,img);
+  const content=img?[{type:'image_url',image_url:{url:img}},{type:'text',text:txt||'What do you think?'}]:txt;
+  hist.push({role:'user',content});
   showTyping();
-
   try {
-    const res = await fetch('https://api.deepinfra.com/v1/openai/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${key}`,
-      },
-      body: JSON.stringify({
-        model: DEEPINFRA_MODEL,
-        max_tokens: 1024,
-        messages: [
-          { role: 'system', content: buildSystemPrompt() },
-          ...chatHistory,
-        ],
-      })
+    const r=await fetch('https://api.deepinfra.com/v1/openai/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`},
+      body:JSON.stringify({model:MODEL,max_tokens:1024,messages:[{role:'system',content:sysPrompt()},...hist]})
     });
-
-    const data = await res.json();
-    hideTyping();
-
-    if (data.error) {
-      appendMessage('ai', `Error: ${data.error.message || JSON.stringify(data.error)}`);
-      chatHistory.pop();
-      return;
-    }
-
-    const reply = data.choices[0].message.content;
-    chatHistory.push({ role: 'assistant', content: reply });
-    appendMessage('ai', reply);
-
-  } catch (err) {
-    hideTyping();
-    appendMessage('ai', 'Could not reach DeepInfra. Check your connection and token.');
-    chatHistory.pop();
-  } finally {
-    btn.disabled = false;
-  }
+    const data=await r.json(); hideTyping();
+    if(data.error){addMsg('ai',`Error: ${data.error.message||JSON.stringify(data.error)}`);hist.pop();return;}
+    const reply=data.choices[0].message.content;
+    hist.push({role:'assistant',content:reply}); addMsg('ai',reply);
+  } catch(e){ hideTyping(); addMsg('ai','Could not reach DeepInfra. Check your connection.'); hist.pop(); }
+  finally{ btn.disabled=!document.getElementById('chat-input').value.trim()&&!pendImg; }
 }
 
-// ── Image picker ──
-document.getElementById('img-btn').addEventListener('click', () => {
-  document.getElementById('img-file-input').click();
+document.getElementById('chat-input').addEventListener('input',function(){
+  this.style.height='auto';
+  this.style.height=Math.min(this.scrollHeight,120)+'px';
+  document.getElementById('send-btn').disabled=!this.value.trim()&&!pendImg;
+});
+document.getElementById('chat-input').addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();} });
+document.getElementById('send-btn').addEventListener('click',send);
+document.getElementById('cam-btn').addEventListener('click',()=>document.getElementById('img-input').click());
+document.getElementById('img-input').addEventListener('change',function(){
+  const f=this.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=e=>{pendImg=e.target.result;document.getElementById('img-prev').src=pendImg;document.getElementById('img-prev-bar').classList.add('has-img');document.getElementById('send-btn').disabled=false;};
+  r.readAsDataURL(f);
+});
+document.getElementById('img-rm').addEventListener('click',()=>{clearImg();document.getElementById('send-btn').disabled=!document.getElementById('chat-input').value.trim();});
+document.getElementById('key-save').addEventListener('click',()=>{
+  const v=document.getElementById('key-input').value.trim(); if(!v) return;
+  localStorage.setItem('m_key',v); hist=[]; openChat();
+});
+document.getElementById('chat-reset').addEventListener('click',()=>{
+  localStorage.removeItem('m_key'); hist=[];
+  document.getElementById('chat-msgs').innerHTML=''; openChat();
 });
 
-document.getElementById('img-file-input').addEventListener('change', function() {
-  const file = this.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    pendingImageB64 = e.target.result;
-    document.getElementById('img-preview').src = pendingImageB64;
-    document.getElementById('img-preview-bar').classList.add('has-img');
-  };
-  reader.readAsDataURL(file);
-});
-
-document.getElementById('img-remove-btn').addEventListener('click', clearImagePreview);
-
-// ── Key save / reset ──
-document.getElementById('save-key-btn').addEventListener('click', () => {
-  const val = document.getElementById('api-key-input').value.trim();
-  if (!val) { document.getElementById('api-key-input').style.borderColor = 'var(--danger)'; return; }
-  localStorage.setItem('mint_dikey', val);
-  renderChat();
-});
-
-document.getElementById('reset-key-btn').addEventListener('click', () => {
-  localStorage.removeItem('mint_dikey');
-  chatHistory = [];
-  document.getElementById('chat-messages').innerHTML = '';
-  renderChat();
-});
-
-// ── Send ──
-document.getElementById('send-btn').addEventListener('click', sendMessage);
-document.getElementById('chat-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-});
-document.getElementById('chat-input').addEventListener('input', function() {
-  this.style.height = 'auto';
-  this.style.height = Math.min(this.scrollHeight, 100) + 'px';
-});
-
-// ═══════════════════════════════════════════════════
-// SERVICE WORKER
-// ═══════════════════════════════════════════════════
-
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').catch(() => {});
+// iOS keyboard fix
+function adjustVP(){
+  if(!window.visualViewport) return;
+  const vv=window.visualViewport;
+  const cs=document.getElementById('chat-screen');
+  cs.style.height=vv.height+'px';
+  cs.style.top=vv.offsetTop+'px';
+  const msgs=document.getElementById('chat-msgs');
+  if(msgs) setTimeout(()=>{msgs.scrollTop=msgs.scrollHeight;},30);
+}
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize',adjustVP);
+  window.visualViewport.addEventListener('scroll',adjustVP);
 }
 
-// ═══════════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════════
+// ═══ GOAL MODAL ═══
+document.getElementById('add-goal-btn').addEventListener('click',()=>{
+  ['g-title','g-desc','g-miles'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('g-date').value=daysFromNow(30);
+  document.getElementById('goal-overlay').classList.add('open');
+});
+document.getElementById('goal-overlay').addEventListener('click',e=>{if(e.target===document.getElementById('goal-overlay'))document.getElementById('goal-overlay').classList.remove('open');});
+document.getElementById('g-save').addEventListener('click',()=>{
+  const t=document.getElementById('g-title').value.trim(); if(!t) return;
+  const miles=document.getElementById('g-miles').value.trim().split('\n').filter(Boolean).map(x=>({text:x.trim(),done:false}));
+  S.goals.push({id:'g'+Date.now(),title:t,desc:document.getElementById('g-desc').value.trim(),deadline:document.getElementById('g-date').value,milestones:miles});
+  save(); document.getElementById('goal-overlay').classList.remove('open'); renderGoals();
+});
 
+// ═══ SW + INIT ═══
+if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 switchTab('today');
 </script>
 </body>
