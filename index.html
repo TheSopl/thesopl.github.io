@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mint">
+  <meta name="theme-color" content="#0a0a0f">
+  <link rel="manifest" href="manifest.json">
+  <title>Mint</title>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --card: #16161f;
+      --border: #1f1f2e;
+      --mint: #3effc8;
+      --mint-dim: rgba(62,255,200,0.12);
+      --mint-glow: rgba(62,255,200,0.25);
+      --text: #eeeef5;
+      --muted: #5a5a72;
+      --muted2: #8888a0;
+      --danger: #ff5f6d;
+      --warning: #ffb347;
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; background: var(--bg); }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif; color: var(--text); overscroll-behavior: none; }
+
+    /* ── LAYOUT ── */
+    #app { display: flex; flex-direction: column; height: 100%; height: 100dvh; }
+    .screen { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 0 0 16px; -webkit-overflow-scrolling: touch; }
+    .screen::-webkit-scrollbar { display: none; }
+
+    /* ── TOP BAR ── */
+    .topbar { padding: env(safe-area-inset-top, 20px) 20px 0; padding-top: max(env(safe-area-inset-top), 52px); }
+    .topbar-inner { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; }
+    .topbar h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+    .topbar h1 span { color: var(--mint); }
+    .streak-badge { background: var(--mint-dim); border: 1px solid var(--mint-glow); border-radius: 20px; padding: 5px 12px; font-size: 13px; font-weight: 600; color: var(--mint); display: flex; align-items: center; gap: 5px; }
+
+    /* ── SECTION ── */
+    .section { padding: 0 16px; margin-bottom: 24px; }
+    .section-title { font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+
+    /* ── CARDS ── */
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .card + .card { margin-top: 10px; }
+
+    /* ── HABIT ITEM ── */
+    .habit-item { display: flex; align-items: center; gap: 14px; padding: 15px 16px; cursor: pointer; user-select: none; transition: background 0.15s; position: relative; }
+    .habit-item:not(:last-child)::after { content: ''; position: absolute; bottom: 0; left: 16px; right: 0; height: 1px; background: var(--border); }
+    .habit-item:active { background: rgba(255,255,255,0.03); }
+    .habit-check { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .habit-item.done .habit-check { background: var(--mint); border-color: var(--mint); }
+    .habit-item.done .habit-check::after { content: ''; display: block; width: 9px; height: 6px; border-left: 2px solid #0a0a0f; border-bottom: 2px solid #0a0a0f; transform: rotate(-45deg) translateY(-1px); }
+    .habit-info { flex: 1; min-width: 0; }
+    .habit-name { font-size: 15px; font-weight: 500; transition: color 0.2s; }
+    .habit-item.done .habit-name { color: var(--muted2); text-decoration: line-through; }
+    .habit-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .habit-streak { font-size: 12px; font-weight: 600; color: var(--mint); background: var(--mint-dim); border-radius: 10px; padding: 2px 8px; white-space: nowrap; }
+
+    /* ── PROGRESS BAR ── */
+    .progress-wrap { padding: 0 16px 20px; }
+    .progress-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
+    .progress-label { color: var(--muted2); }
+    .progress-count { font-weight: 600; color: var(--mint); }
+    .progress-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--mint), #00c896); border-radius: 3px; transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+    /* ── TIPS ── */
+    .tip-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; cursor: pointer; }
+    .tip-card + .tip-card { margin-top: 10px; }
+    .tip-header { display: flex; align-items: flex-start; gap: 12px; }
+    .tip-icon { font-size: 22px; flex-shrink: 0; width: 42px; height: 42px; background: var(--mint-dim); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+    .tip-meta { flex: 1; }
+    .tip-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .tip-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+    .tag { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.3px; }
+    .tag-evidence { background: rgba(62,255,200,0.15); color: var(--mint); }
+    .tag-time { background: rgba(255,179,71,0.15); color: var(--warning); }
+    .tag-cat { background: rgba(255,255,255,0.07); color: var(--muted2); }
+    .tip-body { font-size: 13.5px; color: var(--muted2); line-height: 1.55; margin-top: 12px; display: none; }
+    .tip-body.open { display: block; }
+    .tip-arrow { color: var(--muted); font-size: 13px; transition: transform 0.2s; align-self: center; }
+    .tip-card.open .tip-arrow { transform: rotate(180deg); }
+
+    /* ── CATEGORY PILLS ── */
+    .cat-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 0 16px 12px; -webkit-overflow-scrolling: touch; }
+    .cat-scroll::-webkit-scrollbar { display: none; }
+    .cat-pill { flex-shrink: 0; padding: 7px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; border: 1px solid var(--border); color: var(--muted2); background: var(--card); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+    .cat-pill.active { background: var(--mint-dim); border-color: var(--mint-glow); color: var(--mint); }
+
+    /* ── GOALS ── */
+    .goal-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+    .goal-card + .goal-card { margin-top: 10px; }
+    .goal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+    .goal-title { font-size: 16px; font-weight: 600; }
+    .goal-deadline { font-size: 12px; color: var(--muted); }
+    .goal-desc { font-size: 13.5px; color: var(--muted2); line-height: 1.5; margin-bottom: 12px; }
+    .goal-milestones { border-top: 1px solid var(--border); padding-top: 12px; }
+    .milestone { display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; cursor: pointer; }
+    .milestone-dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; margin-top: 1px; transition: all 0.2s; }
+    .milestone.done .milestone-dot { background: var(--mint); border-color: var(--mint); }
+    .milestone-text { font-size: 13.5px; line-height: 1.4; }
+    .milestone.done .milestone-text { color: var(--muted); text-decoration: line-through; }
+    .goal-progress-wrap { margin-top: 10px; }
+    .goal-pct { font-size: 12px; color: var(--mint); font-weight: 600; text-align: right; margin-bottom: 4px; }
+
+    /* ── ADD GOAL BUTTON ── */
+    .add-goal-btn { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--mint-dim); border: 1px dashed var(--mint-glow); border-radius: var(--radius); padding: 16px; font-size: 15px; font-weight: 600; color: var(--mint); cursor: pointer; transition: all 0.15s; width: 100%; }
+    .add-goal-btn:active { opacity: 0.7; }
+
+    /* ── STATS ── */
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+    .stat-val { font-size: 32px; font-weight: 700; color: var(--mint); letter-spacing: -1px; }
+    .stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 6px; }
+    .week-day { aspect-ratio: 1; border-radius: 6px; background: var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+    .week-day.filled { background: var(--mint-dim); border: 1px solid var(--mint-glow); }
+    .week-day.today { border: 1px solid var(--mint); }
+    .week-day-label { font-size: 9px; color: var(--muted); font-weight: 600; text-transform: uppercase; }
+    .week-day-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--mint); opacity: 0; }
+    .week-day.filled .week-day-dot { opacity: 1; }
+
+    /* ── BOTTOM NAV ── */
+    .nav { display: flex; background: var(--surface); border-top: 1px solid var(--border); padding-bottom: env(safe-area-inset-bottom, 0); flex-shrink: 0; }
+    .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 0 8px; cursor: pointer; transition: all 0.15s; color: var(--muted); }
+    .nav-item.active { color: var(--mint); }
+    .nav-icon { font-size: 22px; }
+    .nav-label { font-size: 10px; font-weight: 600; letter-spacing: 0.3px; }
+
+    /* ── MODAL ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 100; display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 24px 24px 0 0; width: 100%; padding: 24px 20px; padding-bottom: max(env(safe-area-inset-bottom), 24px); transform: translateY(20px); transition: transform 0.25s cubic-bezier(0.34, 1.2, 0.64, 1); }
+    .modal-overlay.open .modal { transform: translateY(0); }
+    .modal-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 20px; }
+    .modal h2 { font-size: 20px; font-weight: 700; margin-bottom: 16px; }
+    .input-group { margin-bottom: 14px; }
+    .input-group label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .input-group input, .input-group textarea { width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; font-size: 15px; color: var(--text); font-family: inherit; outline: none; resize: none; }
+    .input-group input:focus, .input-group textarea:focus { border-color: var(--mint-glow); }
+    .modal-btn { width: 100%; padding: 16px; background: var(--mint); border-radius: var(--radius-sm); border: none; font-size: 16px; font-weight: 700; color: #0a0a0f; cursor: pointer; margin-top: 8px; }
+    .modal-btn:active { opacity: 0.85; }
+
+    /* ── EMPTY STATE ── */
+    .empty { text-align: center; padding: 40px 20px; color: var(--muted); }
+    .empty-icon { font-size: 40px; margin-bottom: 12px; }
+    .empty p { font-size: 14px; line-height: 1.5; }
+
+    /* ── HIDDEN ── */
+    .hidden { display: none !important; }
+
+    /* ── COMPLETION MSG ── */
+    .done-banner { background: var(--mint-dim); border: 1px solid var(--mint-glow); border-radius: var(--radius-sm); padding: 12px 16px; display: flex; align-items: center; gap: 10px; margin: 0 16px 20px; }
+    .done-banner-text { font-size: 14px; font-weight: 600; color: var(--mint); }
+    .done-banner-sub { font-size: 12px; color: var(--muted2); }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ═══ TODAY TAB ═══ -->
+  <div class="screen hidden" id="screen-today">
+    <div class="topbar">
+      <div class="topbar-inner">
+        <h1>Good <span id="greeting-word">morning</span></h1>
+        <div class="streak-badge">🔥 <span id="streak-count">0</span> day streak</div>
+      </div>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-header">
+        <span class="progress-label">Today's habits</span>
+        <span class="progress-count"><span id="done-count">0</span> / <span id="total-count">0</span></span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    </div>
+
+    <div id="done-banner" class="done-banner hidden">
+      <span style="font-size:20px">✦</span>
+      <div>
+        <div class="done-banner-text">All done today.</div>
+        <div class="done-banner-sub">Consistency is the whole game.</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Morning</div>
+      <div class="card" id="habits-morning"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Anytime</div>
+      <div class="card" id="habits-anytime"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Night</div>
+      <div class="card" id="habits-night"></div>
+    </div>
+  </div>
+
+  <!-- ═══ LOOKS TAB ═══ -->
+  <div class="screen hidden" id="screen-looks">
+    <div class="topbar">
+      <div class="topbar-inner">
+        <h1>The <span>Science</span></h1>
+      </div>
+    </div>
+    <div class="cat-scroll" id="cat-scroll"></div>
+    <div class="section" id="tips-list"></div>
+  </div>
+
+  <!-- ═══ GOALS TAB ═══ -->
+  <div class="screen hidden" id="screen-goals">
+    <div class="topbar">
+      <div class="topbar-inner">
+        <h1>Short <span>Goals</span></h1>
+      </div>
+    </div>
+    <div class="section" id="goals-list"></div>
+    <div class="section">
+      <button class="add-goal-btn" id="add-goal-btn">+ Add goal</button>
+    </div>
+  </div>
+
+  <!-- ═══ STATS TAB ═══ -->
+  <div class="screen hidden" id="screen-stats">
+    <div class="topbar">
+      <div class="topbar-inner">
+        <h1>Your <span>Stats</span></h1>
+      </div>
+    </div>
+    <div class="section">
+      <div class="stat-grid" id="stat-grid"></div>
+    </div>
+    <div class="section">
+      <div class="section-title">This week</div>
+      <div class="card" style="padding:16px">
+        <div class="week-grid" id="week-grid"></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-title">Habit completion — last 7 days</div>
+      <div id="habit-stats-list"></div>
+    </div>
+  </div>
+
+  <!-- ═══ NAV ═══ -->
+  <nav class="nav" id="nav">
+    <div class="nav-item active" data-tab="today">
+      <div class="nav-icon">◈</div>
+      <div class="nav-label">Today</div>
+    </div>
+    <div class="nav-item" data-tab="looks">
+      <div class="nav-icon">◉</div>
+      <div class="nav-label">Looks</div>
+    </div>
+    <div class="nav-item" data-tab="goals">
+      <div class="nav-icon">◎</div>
+      <div class="nav-label">Goals</div>
+    </div>
+    <div class="nav-item" data-tab="stats">
+      <div class="nav-icon">▣</div>
+      <div class="nav-label">Stats</div>
+    </div>
+  </nav>
+</div>
+
+<!-- ═══ ADD GOAL MODAL ═══ -->
+<div class="modal-overlay" id="goal-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2>New goal</h2>
+    <div class="input-group">
+      <label>Title</label>
+      <input type="text" id="goal-title-input" placeholder="e.g. Clear skin by month end">
+    </div>
+    <div class="input-group">
+      <label>Description</label>
+      <textarea id="goal-desc-input" rows="2" placeholder="What does winning look like?"></textarea>
+    </div>
+    <div class="input-group">
+      <label>Deadline</label>
+      <input type="date" id="goal-date-input">
+    </div>
+    <div class="input-group">
+      <label>Milestones (one per line)</label>
+      <textarea id="goal-miles-input" rows="4" placeholder="Week 1: Start SPF daily&#10;Week 2: Add retinol&#10;Week 3: No new breakouts&#10;Week 4: Skin looks visibly better"></textarea>
+    </div>
+    <button class="modal-btn" id="save-goal-btn">Save goal</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════
+
+const HABITS = [
+  // Morning
+  { id: 'spf',       name: 'Apply SPF 30+',         sub: 'Single biggest anti-aging move',      group: 'morning', streakKey: 'spf' },
+  { id: 'cleanser',  name: 'Morning cleanse',        sub: 'Remove overnight sebum + bacteria',   group: 'morning', streakKey: 'cleanser' },
+  { id: 'vit-c',     name: 'Vitamin C serum',        sub: 'Brightens, protects from UV damage',  group: 'morning', streakKey: 'vit-c' },
+  { id: 'moistam',   name: 'Moisturize (AM)',         sub: 'Lock in barrier, reduce TEWL',        group: 'morning', streakKey: 'moistam' },
+  { id: 'groom',     name: 'Groom yourself',          sub: 'Hair, face, look intentional',        group: 'morning', streakKey: 'groom' },
+  // Anytime
+  { id: 'water',     name: 'Drink 2L+ water',        sub: 'Skin plumpness + elasticity',         group: 'anytime', streakKey: 'water' },
+  { id: 'exercise',  name: 'Move for 30min+',        sub: 'Boosts blood flow to skin, posture',  group: 'anytime', streakKey: 'exercise' },
+  { id: 'posture',   name: 'Check your posture',     sub: 'Tall = dominant + attractive',        group: 'anytime', streakKey: 'posture' },
+  { id: 'nutrition', name: 'Eat whole, clean food',  sub: 'Omega-3s, antioxidants, less sugar',  group: 'anytime', streakKey: 'nutrition' },
+  // Night
+  { id: 'cleanse2',  name: 'Double cleanse',         sub: 'Oil then water cleanser at night',    group: 'night', streakKey: 'cleanse2' },
+  { id: 'retinol',   name: 'Retinol / Retinoid',     sub: '3-4x/week — strongest topical fix',  group: 'night', streakKey: 'retinol' },
+  { id: 'moistpm',   name: 'Moisturize (PM)',         sub: 'Skin repairs itself overnight',       group: 'night', streakKey: 'moistpm' },
+  { id: 'sleep',     name: 'Sleep 7–9 hours',        sub: 'Sleep-deprived = rated less attractive', group: 'night', streakKey: 'sleep' },
+];
+
+const TIPS = [
+  // SKIN
+  {
+    id: 't1', cat: 'Skin', icon: '☀️', title: 'Wear SPF every single day',
+    evidence: 'Strong', time: 'Years of damage prevented',
+    body: `UV radiation is the #1 cause of visible aging — wrinkles, dark spots, loss of elasticity. A landmark 2013 RCT in Annals of Internal Medicine showed daily SPF users had 24% less skin aging vs. discretionary users over 4.5 years. Use SPF 30+ every morning, even indoors near windows. Reapply if outside. This is non-negotiable.`
+  },
+  {
+    id: 't2', cat: 'Skin', icon: '🔬', title: 'Use retinol or a retinoid',
+    evidence: 'Very Strong', time: '12–16 weeks',
+    body: `Retinoids are the most clinically studied topical ingredient for anti-aging and acne. They increase cell turnover, stimulate collagen synthesis, and reduce hyperpigmentation. Multiple double-blind studies confirm efficacy. Start 2–3x/week at night (0.025–0.1% retinol), build tolerance slowly. Always follow with moisturizer. Avoid in AM (degrades in sunlight) and always wear SPF.`
+  },
+  {
+    id: 't3', cat: 'Skin', icon: '🍊', title: 'Apply Vitamin C serum (AM)',
+    evidence: 'Strong', time: '4–8 weeks',
+    body: `L-ascorbic acid (Vitamin C) is a powerful antioxidant that neutralizes UV-induced free radicals, brightens skin tone, and boosts collagen. Studies show it reduces hyperpigmentation and improves overall radiance. Use 10–20% L-ascorbic acid in the morning before SPF for synergistic photoprotection. Store in cool/dark place — discard if it turns orange/brown.`
+  },
+  {
+    id: 't4', cat: 'Skin', icon: '🧴', title: 'Moisturize with ceramides',
+    evidence: 'Strong', time: '1–2 weeks',
+    body: `Ceramides make up 50% of your skin barrier. When depleted, water escapes (TEWL) and skin looks dull, flaky, and inflamed. Ceramide-containing moisturizers significantly restore barrier function. Apply AM and PM after active ingredients. Especially important after retinol or exfoliants. Look for: ceramide NP, AP, EOP in the ingredients.`
+  },
+  {
+    id: 't5', cat: 'Skin', icon: '🔷', title: 'Niacinamide reduces pores & tone',
+    evidence: 'Strong', time: '4–8 weeks',
+    body: `Niacinamide (Vitamin B3) at 4–5% concentration reduces sebum production, minimizes pore appearance, fades hyperpigmentation, and strengthens the skin barrier. Multiple clinical trials show significant improvements. It's gentle enough for daily use, works in AM or PM, and pairs well with most ingredients including retinol. One of the safest high-impact ingredients.`
+  },
+  // SLEEP
+  {
+    id: 't6', cat: 'Sleep', icon: '🌙', title: '7–9 hours makes you look better — literally',
+    evidence: 'Very Strong', time: 'Days',
+    body: `A 2010 study (Axelsson et al., BMJ) had raters judge faces of sleep-deprived vs. rested people blind — sleep-deprived faces were consistently rated as less healthy, less attractive, and more tired. Sleep is when skin repairs collagen, regulates cortisol, and reduces inflammation. Chronic poor sleep increases cortisol — which breaks down collagen and causes breakouts. Fix this first before any product.`
+  },
+  {
+    id: 't7', cat: 'Sleep', icon: '⏰', title: 'Consistent sleep schedule matters',
+    evidence: 'Strong', time: '1–2 weeks',
+    body: `It's not just about hours — timing matters. Your circadian rhythm controls cortisol, melatonin, and cellular repair cycles. Going to bed and waking at the same time daily (±30 min), even weekends, anchors your rhythm. This improves sleep quality measurably. Poor circadian rhythm is linked to worse skin, weight gain, and mood dysregulation — all of which affect your appearance.`
+  },
+  // FITNESS
+  {
+    id: 't8', cat: 'Fitness', icon: '💪', title: 'Resistance training for attractiveness',
+    evidence: 'Very Strong', time: '8–12 weeks visible',
+    body: `Multiple studies show that muscular physique is consistently rated as most attractive by both sexes. Specifically, shoulder-to-waist ratio (V-taper) is the strongest physical predictor of male attractiveness (Singh & Young 1995, multiple replications). Aim for 3–4x/week compound lifts (bench, row, OHP, squat, deadlift). Shoulders + lats are the highest ROI for visual appearance.`
+  },
+  {
+    id: 't9', cat: 'Fitness', icon: '🏃', title: 'Cardio improves your skin',
+    evidence: 'Moderate', time: '4–8 weeks',
+    body: `Aerobic exercise increases blood flow to skin, delivering oxygen and nutrients while clearing cellular waste — this directly improves skin appearance. A 2014 McMaster University study found active adults had significantly younger-looking skin histologically. 150 min/week of moderate cardio is the evidence-based recommendation. Even 20 min walks daily make a measurable difference.`
+  },
+  {
+    id: 't10', cat: 'Fitness', icon: '🧍', title: 'Fix your posture — it changes how people see you',
+    evidence: 'Strong', time: 'Immediate',
+    body: `Multiple studies show upright posture is rated as significantly more dominant, confident, and attractive. Slumped posture compresses your frame and signals low status. Aim for: ears over shoulders, shoulders over hips, chin parallel to floor. Consistent reminders + strengthen posterior chain (rows, face pulls, hip hinges). Effect is immediate — people perceive you differently the moment you stand taller.`
+  },
+  // NUTRITION
+  {
+    id: 't11', cat: 'Nutrition', icon: '🐟', title: 'Omega-3s for skin hydration',
+    evidence: 'Strong', time: '6–12 weeks',
+    body: `Omega-3 fatty acids (EPA/DHA) are incorporated into cell membranes and reduce systemic inflammation. Multiple RCTs show omega-3 supplementation improves skin hydration, reduces transepidermal water loss, and decreases inflammatory acne. Aim for 2–3g EPA+DHA/day from fatty fish (salmon, mackerel, sardines) or quality fish oil. This also reduces the cortisol response to stress, indirectly improving skin.`
+  },
+  {
+    id: 't12', cat: 'Nutrition', icon: '🫐', title: 'Cut sugar to protect your collagen',
+    evidence: 'Moderate–Strong', time: '4–8 weeks',
+    body: `Glycation is a process where excess glucose bonds to collagen fibers, making them stiff, cross-linked, and brittle — causing wrinkles and dull skin. High glycemic diets are independently associated with acne severity (multiple studies). Reducing added sugars and high-GI carbs directly protects your skin's structural integrity. Swap refined carbs for whole foods, reduce alcohol — glycation is real and cumulative.`
+  },
+  {
+    id: 't13', cat: 'Nutrition', icon: '💧', title: 'Hydration is visible on your face',
+    evidence: 'Moderate', time: 'Days',
+    body: `Even mild dehydration (1–2% body weight) reduces skin elasticity and makes fine lines more pronounced. Studies measuring skin elasticity show measurable improvements with adequate hydration. Aim for ~2–2.5L water/day minimum, more if exercising. Note: coffee/tea count, but alcohol is dehydrating. Humectant ingredients like hyaluronic acid in skincare work synergistically with internal hydration.`
+  },
+  // GROOMING
+  {
+    id: 't14', cat: 'Grooming', icon: '✂️', title: 'Haircut every 4–6 weeks',
+    evidence: 'Social consensus', time: 'Immediate',
+    body: `Your hair is one of the first things people notice. Growing out, shapeless hair signals neglect. A fresh cut signals you take care of yourself — this alone is one of the highest-ROI grooming moves. Find a style that suits your face shape (oval: anything works; round: add height; square: softer sides) and go to a real barber/stylist. Don't wait until it's clearly overgrown. The 4-6 week mark is when cuts start losing shape.`
+  },
+  {
+    id: 't15', cat: 'Grooming', icon: '🪒', title: 'Groom your eyebrows',
+    evidence: 'Research-backed', time: 'Immediate',
+    body: `Eyes are the most important facial feature for attractiveness, and eyebrows frame the eyes. A 2019 study (Sadr & Sadr) found that eyebrows had greater impact on face recognition than eyes — meaning they're heavily processed features. Unkempt eyebrows (overgrown, unibrow, asymmetrical) significantly reduce facial attractiveness ratings. You don't need to dramatically reshape — just clean up the unibrow and stray hairs, and tame bushy areas. Takes 5 minutes.`
+  },
+  {
+    id: 't16', cat: 'Grooming', icon: '🦷', title: 'White teeth signal health',
+    evidence: 'Moderate', time: '2–4 weeks',
+    body: `Multiple studies show whiter teeth are rated as significantly more attractive and correlated with perceived health and success (Kershaw et al. 2008). Staining from coffee, tea, and certain foods accumulates over time. Consistent whitening (strips, professional treatment) + daily brushing + floss is the baseline. An electric toothbrush removes significantly more plaque than manual brushing. This is a legitimately underrated appearance upgrade.`
+  },
+  // STYLE
+  {
+    id: 't17', cat: 'Style', icon: '👕', title: 'Fit > brand, always',
+    evidence: 'Consensus + studies', time: 'Immediate',
+    body: `Research on clothing and attractiveness consistently shows that fit is the primary driver of how clothing affects perceived attractiveness — not brand or price. Clothes that fit your frame (shoulders seam at shoulder, no excess fabric in torso, trousers break at top of shoe) make you look put-together regardless of cost. Get basics tailored if needed — it costs less than buying new clothes and looks far better.`
+  },
+  {
+    id: 't18', cat: 'Style', icon: '🎨', title: 'Wear colors that suit your skin tone',
+    evidence: 'Color theory + moderate research', time: 'Immediate',
+    body: `Wearing colors that complement your skin tone makes your complexion look healthier and more vibrant. Research shows that color harmony affects perceived health. For warm tones (olive, golden): earth tones, olive, warm neutrals. For cool tones (pink, blue undertones): navy, grey, cool whites, blues. Wearing clashing colors can make your skin look sallow or washed out. Start with clothing near your face (tops, hoodies).`
+  },
+];
+
+const DEFAULT_GOALS = [
+  {
+    id: 'g1',
+    title: 'Establish a skin routine',
+    desc: 'Go from zero to consistent with a real evidence-based skincare routine.',
+    deadline: (() => { const d = new Date(); d.setDate(d.getDate() + 30); return d.toISOString().split('T')[0]; })(),
+    milestones: [
+      { text: 'Get SPF 30+, cleanser, and moisturizer', done: false },
+      { text: 'Apply SPF every morning for 7 days straight', done: false },
+      { text: 'Add Vitamin C serum in the morning', done: false },
+      { text: 'Introduce retinol 2x/week at night', done: false },
+      { text: 'Full routine locked in — morning + night', done: false },
+    ]
+  },
+  {
+    id: 'g2',
+    title: 'Fix my sleep schedule',
+    desc: 'Get 7–9 hours consistently at the same time. No exceptions for 2 weeks.',
+    deadline: (() => { const d = new Date(); d.setDate(d.getDate() + 14); return d.toISOString().split('T')[0]; })(),
+    milestones: [
+      { text: 'Pick a consistent wake time and stick to it', done: false },
+      { text: '3 days in a row of 7+ hours', done: false },
+      { text: '7 days in a row — full week', done: false },
+      { text: '14 days — new default', done: false },
+    ]
+  },
+  {
+    id: 'g3',
+    title: 'Build a real physique',
+    desc: 'Resistance train 3x/week for 2 months. V-taper focus: shoulders + back.',
+    deadline: (() => { const d = new Date(); d.setDate(d.getDate() + 60); return d.toISOString().split('T')[0]; })(),
+    milestones: [
+      { text: 'Join a gym / set up home workout space', done: false },
+      { text: 'Complete first full week (3 sessions)', done: false },
+      { text: '1 month consistent — 12+ sessions done', done: false },
+      { text: 'Visible shoulder/back development starting', done: false },
+      { text: '2 months in — physique shift is noticeable', done: false },
+    ]
+  }
+];
+
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+
+function todayKey() { return new Date().toISOString().split('T')[0]; }
+
+function loadState() {
+  return {
+    habitLog:  JSON.parse(localStorage.getItem('mint_habitLog')  || '{}'),
+    streaks:   JSON.parse(localStorage.getItem('mint_streaks')   || '{}'),
+    goals:     JSON.parse(localStorage.getItem('mint_goals')     || 'null') || DEFAULT_GOALS,
+  };
+}
+
+function saveState(state) {
+  localStorage.setItem('mint_habitLog',  JSON.stringify(state.habitLog));
+  localStorage.setItem('mint_streaks',   JSON.stringify(state.streaks));
+  localStorage.setItem('mint_goals',     JSON.stringify(state.goals));
+}
+
+let STATE = loadState();
+
+// ═══════════════════════════════════════════════════
+// STREAK LOGIC
+// ═══════════════════════════════════════════════════
+
+function getYesterdayKey() {
+  const d = new Date(); d.setDate(d.getDate() - 1);
+  return d.toISOString().split('T')[0];
+}
+
+function updateStreak(habitId, completed) {
+  const today = todayKey();
+  const yest  = getYesterdayKey();
+  const streaks = STATE.streaks;
+
+  if (completed) {
+    if (!streaks[habitId]) streaks[habitId] = { count: 0, lastDate: '' };
+    if (streaks[habitId].lastDate === yest) {
+      streaks[habitId].count += 1;
+    } else if (streaks[habitId].lastDate !== today) {
+      streaks[habitId].count = 1;
+    }
+    streaks[habitId].lastDate = today;
+  }
+  saveState(STATE);
+}
+
+function getStreak(habitId) {
+  const s = STATE.streaks[habitId];
+  if (!s) return 0;
+  const today = todayKey();
+  const yest  = getYesterdayKey();
+  if (s.lastDate === today || s.lastDate === yest) return s.count;
+  return 0;
+}
+
+function getLongestStreak() {
+  return Math.max(0, ...Object.values(STATE.streaks).map(s => s.count || 0));
+}
+
+function getTodayStreakCount() {
+  // overall streak = how many days in a row ALL habits were completed
+  // simplified: days where at least 80% habits done
+  const today = todayKey();
+  let streak = 0;
+  const d = new Date();
+  for (let i = 0; i < 365; i++) {
+    const key = d.toISOString().split('T')[0];
+    const log = STATE.habitLog[key] || {};
+    const done = HABITS.filter(h => log[h.id]).length;
+    if (done / HABITS.length >= 0.5 || key === today) {
+      if (done / HABITS.length >= 0.5) streak++;
+      else if (key !== today) break;
+    } else { break; }
+    d.setDate(d.getDate() - 1);
+  }
+  return streak;
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER: TODAY
+// ═══════════════════════════════════════════════════
+
+function renderToday() {
+  const today = todayKey();
+  const log = STATE.habitLog[today] || {};
+
+  // Greeting
+  const h = new Date().getHours();
+  document.getElementById('greeting-word').textContent =
+    h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
+
+  // Streak
+  document.getElementById('streak-count').textContent = getTodayStreakCount();
+
+  // Progress
+  const total = HABITS.length;
+  const done  = HABITS.filter(h => log[h.id]).length;
+  document.getElementById('done-count').textContent  = done;
+  document.getElementById('total-count').textContent = total;
+  document.getElementById('progress-fill').style.width = (done / total * 100) + '%';
+
+  const banner = document.getElementById('done-banner');
+  banner.classList.toggle('hidden', done < total);
+
+  // Render groups
+  ['morning', 'anytime', 'night'].forEach(group => {
+    const container = document.getElementById('habits-' + group);
+    container.innerHTML = '';
+    HABITS.filter(h => h.group === group).forEach(habit => {
+      const isDone = !!log[habit.id];
+      const streak = getStreak(habit.id);
+      const el = document.createElement('div');
+      el.className = 'habit-item' + (isDone ? ' done' : '');
+      el.dataset.id = habit.id;
+      el.innerHTML = `
+        <div class="habit-check"></div>
+        <div class="habit-info">
+          <div class="habit-name">${habit.name}</div>
+          <div class="habit-sub">${habit.sub}</div>
+        </div>
+        ${streak > 1 ? `<div class="habit-streak">🔥 ${streak}d</div>` : ''}
+      `;
+      el.addEventListener('click', () => toggleHabit(habit.id));
+      container.appendChild(el);
+    });
+  });
+}
+
+function toggleHabit(id) {
+  const today = todayKey();
+  if (!STATE.habitLog[today]) STATE.habitLog[today] = {};
+  const wasDone = STATE.habitLog[today][id];
+  STATE.habitLog[today][id] = !wasDone;
+  updateStreak(id, !wasDone);
+  saveState(STATE);
+  renderToday();
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER: LOOKS
+// ═══════════════════════════════════════════════════
+
+let activeCategory = 'All';
+
+function renderLooks() {
+  const cats = ['All', ...new Set(TIPS.map(t => t.cat))];
+  const scroll = document.getElementById('cat-scroll');
+  scroll.innerHTML = '';
+  cats.forEach(cat => {
+    const el = document.createElement('div');
+    el.className = 'cat-pill' + (cat === activeCategory ? ' active' : '');
+    el.textContent = cat;
+    el.addEventListener('click', () => { activeCategory = cat; renderLooks(); });
+    scroll.appendChild(el);
+  });
+
+  const list = document.getElementById('tips-list');
+  list.innerHTML = '';
+  const filtered = activeCategory === 'All' ? TIPS : TIPS.filter(t => t.cat === activeCategory);
+  filtered.forEach(tip => {
+    const el = document.createElement('div');
+    el.className = 'tip-card';
+    el.innerHTML = `
+      <div class="tip-header">
+        <div class="tip-icon">${tip.icon}</div>
+        <div class="tip-meta">
+          <div class="tip-title">${tip.title}</div>
+          <div class="tip-tags">
+            <span class="tag tag-cat">${tip.cat}</span>
+            <span class="tag tag-evidence">Evidence: ${tip.evidence}</span>
+            <span class="tag tag-time">${tip.time}</span>
+          </div>
+        </div>
+        <div class="tip-arrow">▾</div>
+      </div>
+      <div class="tip-body">${tip.body}</div>
+    `;
+    el.addEventListener('click', () => {
+      el.classList.toggle('open');
+      el.querySelector('.tip-body').classList.toggle('open');
+    });
+    list.appendChild(el);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER: GOALS
+// ═══════════════════════════════════════════════════
+
+function renderGoals() {
+  const list = document.getElementById('goals-list');
+  list.innerHTML = '';
+
+  if (STATE.goals.length === 0) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">◎</div><p>No goals yet.<br>Add one below.</p></div>`;
+    return;
+  }
+
+  STATE.goals.forEach((goal, gi) => {
+    const total = goal.milestones.length;
+    const done  = goal.milestones.filter(m => m.done).length;
+    const pct   = total ? Math.round(done / total * 100) : 0;
+
+    const daysLeft = Math.ceil((new Date(goal.deadline) - new Date()) / 86400000);
+    const dueStr   = daysLeft > 0 ? `${daysLeft}d left` : daysLeft === 0 ? 'Due today' : 'Overdue';
+
+    const el = document.createElement('div');
+    el.className = 'goal-card';
+    el.innerHTML = `
+      <div class="goal-header">
+        <div class="goal-title">${goal.title}</div>
+        <div class="goal-deadline">${dueStr}</div>
+      </div>
+      <div class="goal-desc">${goal.desc}</div>
+      <div class="goal-milestones">
+        ${goal.milestones.map((m, mi) => `
+          <div class="milestone${m.done ? ' done' : ''}" data-gi="${gi}" data-mi="${mi}">
+            <div class="milestone-dot"></div>
+            <div class="milestone-text">${m.text}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="goal-progress-wrap">
+        <div class="goal-pct">${pct}%</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      </div>
+    `;
+
+    el.querySelectorAll('.milestone').forEach(mEl => {
+      mEl.addEventListener('click', (e) => {
+        const gi2 = +mEl.dataset.gi;
+        const mi2 = +mEl.dataset.mi;
+        STATE.goals[gi2].milestones[mi2].done = !STATE.goals[gi2].milestones[mi2].done;
+        saveState(STATE);
+        renderGoals();
+      });
+    });
+
+    list.appendChild(el);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER: STATS
+// ═══════════════════════════════════════════════════
+
+function renderStats() {
+  const today = todayKey();
+  const log = STATE.habitLog[today] || {};
+  const todayDone = HABITS.filter(h => log[h.id]).length;
+  const longestStreak = getLongestStreak();
+  const totalGoalDone = STATE.goals.reduce((a, g) => a + g.milestones.filter(m => m.done).length, 0);
+
+  // Count total habit completions ever
+  let totalCompletions = 0;
+  Object.values(STATE.habitLog).forEach(dayLog => {
+    totalCompletions += Object.values(dayLog).filter(Boolean).length;
+  });
+
+  document.getElementById('stat-grid').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-val">${todayDone}</div>
+      <div class="stat-label">Done today</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">${getTodayStreakCount()}</div>
+      <div class="stat-label">Current streak</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">${longestStreak}</div>
+      <div class="stat-label">Longest streak</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">${totalCompletions}</div>
+      <div class="stat-label">Total check-ins</div>
+    </div>
+  `;
+
+  // Week grid
+  const weekGrid = document.getElementById('week-grid');
+  weekGrid.innerHTML = '';
+  const days = ['M','T','W','T','F','S','S'];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().split('T')[0];
+    const dayLog = STATE.habitLog[key] || {};
+    const done = HABITS.filter(h => dayLog[h.id]).length;
+    const isToday = key === today;
+    const filled = done >= HABITS.length * 0.5;
+    const div = document.createElement('div');
+    div.className = 'week-day' + (filled ? ' filled' : '') + (isToday ? ' today' : '');
+    div.innerHTML = `<div class="week-day-label">${days[6-i]}</div><div class="week-day-dot"></div>`;
+    weekGrid.appendChild(div);
+  }
+
+  // Per-habit stats
+  const hList = document.getElementById('habit-stats-list');
+  hList.innerHTML = '';
+  HABITS.forEach(habit => {
+    let count = 0;
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      const key = d.toISOString().split('T')[0];
+      if (STATE.habitLog[key]?.[habit.id]) count++;
+    }
+    const pct = Math.round(count / 7 * 100);
+    const el = document.createElement('div');
+    el.className = 'card';
+    el.style.marginBottom = '8px';
+    el.innerHTML = `
+      <div style="padding:12px 14px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13.5px">
+          <span>${habit.name}</span>
+          <span style="color:var(--mint);font-weight:600">${count}/7</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      </div>
+    `;
+    hList.appendChild(el);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════
+
+let currentTab = 'today';
+const screens = { today: 'screen-today', looks: 'screen-looks', goals: 'screen-goals', stats: 'screen-stats' };
+const renders  = { today: renderToday, looks: renderLooks, goals: renderGoals, stats: renderStats };
+
+function switchTab(tab) {
+  currentTab = tab;
+  Object.entries(screens).forEach(([t, id]) => {
+    document.getElementById(id).classList.toggle('hidden', t !== tab);
+  });
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.tab === tab);
+  });
+  renders[tab]();
+}
+
+document.getElementById('nav').addEventListener('click', e => {
+  const item = e.target.closest('.nav-item');
+  if (item) switchTab(item.dataset.tab);
+});
+
+// ═══════════════════════════════════════════════════
+// ADD GOAL MODAL
+// ═══════════════════════════════════════════════════
+
+const modal  = document.getElementById('goal-modal');
+const addBtn = document.getElementById('add-goal-btn');
+
+addBtn.addEventListener('click', () => {
+  document.getElementById('goal-title-input').value = '';
+  document.getElementById('goal-desc-input').value  = '';
+  document.getElementById('goal-miles-input').value = '';
+  const d = new Date(); d.setDate(d.getDate() + 30);
+  document.getElementById('goal-date-input').value  = d.toISOString().split('T')[0];
+  modal.classList.add('open');
+});
+
+modal.addEventListener('click', e => {
+  if (e.target === modal) modal.classList.remove('open');
+});
+
+document.getElementById('save-goal-btn').addEventListener('click', () => {
+  const title  = document.getElementById('goal-title-input').value.trim();
+  const desc   = document.getElementById('goal-desc-input').value.trim();
+  const date   = document.getElementById('goal-date-input').value;
+  const milRaw = document.getElementById('goal-miles-input').value.trim();
+
+  if (!title) { document.getElementById('goal-title-input').focus(); return; }
+
+  const milestones = milRaw
+    ? milRaw.split('\n').map(s => s.trim()).filter(Boolean).map(text => ({ text, done: false }))
+    : [];
+
+  STATE.goals.push({ id: 'g' + Date.now(), title, desc, deadline: date, milestones });
+  saveState(STATE);
+  modal.classList.remove('open');
+  renderGoals();
+});
+
+// ═══════════════════════════════════════════════════
+// SERVICE WORKER
+// ═══════════════════════════════════════════════════
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+
+switchTab('today');
+</script>
+</body>
+</html>
