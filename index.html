@@ -591,6 +591,32 @@
     .cal-today-dot { width:22px; height:22px; border-radius:50%; background:var(--mint); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:#06060e; line-height:1; }
     .cal-amt { font-size:9px; font-weight:700; color:var(--mint); letter-spacing:-0.2px; line-height:1; }
     /* Day detail */
+    /* Budget setup + summary */
+    .budget-setup { margin:0 20px 14px; padding:14px; background:var(--glass); border:1px solid var(--border); border-radius:var(--r); display:flex; flex-direction:column; gap:10px; }
+    .budget-setup-title { font-size:13px; font-weight:700; color:var(--text2); display:flex; justify-content:space-between; align-items:center; }
+    .budget-edit-btn { font-size:11px; color:var(--mint); background:none; border:none; cursor:pointer; font-family:inherit; font-weight:600; }
+    .budget-field { display:flex; flex-direction:column; gap:4px; }
+    .budget-field-label { font-size:10px; color:var(--text3); font-weight:600; letter-spacing:.5px; text-transform:uppercase; }
+    .budget-field-input { background:var(--glass2); border:1px solid var(--border); border-radius:var(--r-xs); padding:10px 12px; font-size:18px; font-weight:700; color:var(--text); font-family:inherit; outline:none; width:100%; }
+    .budget-field-input:focus { border-color:rgba(62,255,200,0.3); }
+    .budget-field-hint { font-size:11px; color:var(--text3); }
+    .budget-save-btn { padding:11px; border-radius:var(--r-sm); background:linear-gradient(135deg,var(--mint2),var(--mint)); border:none; color:#06060e; font-size:14px; font-weight:800; font-family:inherit; cursor:pointer; }
+    .budget-summary { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:0 20px 16px; }
+    .bstat { background:var(--glass); border:1px solid var(--border); border-radius:var(--r-sm); padding:12px 14px; }
+    .bstat.full { grid-column:1/-1; }
+    .bstat-val { font-size:20px; font-weight:800; color:var(--text); letter-spacing:-0.5px; line-height:1.1; }
+    .bstat-val.green { color:var(--mint); }
+    .bstat-val.red { color:var(--danger); }
+    .bstat-val.warn { color:var(--warn); }
+    .bstat-label { font-size:10px; color:var(--text3); font-weight:600; letter-spacing:.4px; text-transform:uppercase; margin-top:3px; }
+    .bstat-bar { height:3px; background:var(--border); border-radius:2px; margin-top:8px; overflow:hidden; }
+    .bstat-bar-fill { height:100%; border-radius:2px; background:var(--mint); transition:width 0.4s; }
+    .bstat-bar-fill.red { background:var(--danger); }
+    /* Skip button + zero-day */
+    .exp-btn-row { display:flex; gap:8px; }
+    .exp-skip-btn { flex:0 0 auto; padding:12px 16px; border-radius:var(--r-sm); background:var(--glass2); border:1px solid var(--border); color:var(--text2); font-size:13px; font-weight:700; font-family:inherit; cursor:pointer; white-space:nowrap; }
+    .exp-add-btn { flex:1; }
+    .cal-zero { font-size:10px; font-weight:800; color:var(--mint2); opacity:0.6; }
     .exp-day-section { padding:16px 20px 40px; }
     .exp-day-title { font-size:13px; font-weight:600; color:var(--text3); letter-spacing:.5px; text-transform:uppercase; margin-bottom:10px; }
     .exp-day-empty { font-size:14px; color:var(--text3); }
@@ -677,6 +703,34 @@
       <button class="curr-btn active" id="curr-try">₺ Turkish Lira</button>
       <button class="curr-btn" id="curr-usd">$ USD</button>
     </div>
+
+    <!-- Budget summary (shown when budget is set) -->
+    <div id="budget-summary" class="budget-summary" style="display:none"></div>
+
+    <!-- Budget setup card -->
+    <div class="budget-setup" id="budget-setup">
+      <div class="budget-setup-title">
+        <span>Budget setup</span>
+        <button class="budget-edit-btn" id="budget-collapse" style="display:none">Done</button>
+      </div>
+      <div class="budget-field">
+        <div class="budget-field-label">Starting cash (current balance)</div>
+        <input class="budget-field-input" id="b-start" type="number" inputmode="decimal" placeholder="0">
+        <div class="budget-field-hint">Your wallet + bank right now</div>
+      </div>
+      <div class="budget-field">
+        <div class="budget-field-label">Save this much (don't touch)</div>
+        <input class="budget-field-input" id="b-save" type="number" inputmode="decimal" placeholder="0">
+        <div class="budget-field-hint">Goes into savings — untouchable</div>
+      </div>
+      <div class="budget-field">
+        <div class="budget-field-label">Spend until (end date)</div>
+        <input class="budget-field-input" id="b-end" type="date" style="font-size:15px">
+        <div class="budget-field-hint">Daily budget = (balance − savings) ÷ days left</div>
+      </div>
+      <button class="budget-save-btn" id="b-save-btn">Calculate my budget</button>
+    </div>
+
     <div class="exp-add-card">
       <div class="exp-amount-row">
         <span class="exp-symbol" id="exp-symbol">₺</span>
@@ -684,8 +738,12 @@
       </div>
       <input class="exp-note-input" id="exp-note" type="text" placeholder="What was it for?">
       <div class="cat-chips" id="cat-chips"></div>
-      <button class="exp-add-btn" id="exp-add-btn">Add expense</button>
+      <div class="exp-btn-row">
+        <button class="exp-skip-btn" id="exp-skip-btn">Zero day ✓</button>
+        <button class="exp-add-btn" id="exp-add-btn">Add expense</button>
+      </div>
     </div>
+
     <div class="cal-header">
       <button class="cal-nav-btn" id="cal-prev">‹</button>
       <div class="cal-month" id="cal-month-label"></div>
@@ -854,6 +912,7 @@ const TIPS = [
 
 const MORNING_ROUTINE = [
   {name:'Wake up — drink 500ml water immediately',  note:'Before anything else. Rehydrates overnight water loss, reduces morning face puffiness.'},
+  {name:'Make bed',                                 note:'Immediately after getting up. Takes 90 seconds. A made bed anchors the rest of the routine — you start the day with one task complete.'},
   {name:'Cold water splash on face',                note:'10–15 seconds. Vasoconstriction shrinks puffiness fast — better than any eye cream.'},
   {name:'Brush teeth (before breakfast)',           note:'Soft bristle, 45° to gum line, 2 minutes. Do NOT rinse with water after — let the fluoride keep working.'},
   {name:'Shower — cold finish',                     note:'End with 30–60 seconds cold water. Reduces inflammation, tightens skin, wakes you up properly.'},
@@ -861,6 +920,7 @@ const MORNING_ROUTINE = [
   {name:'Moisturizer',                              note:'Apply right after Vitamin C while skin is slightly damp. Seals everything in. Required if you\'re using retinol at night.'},
   {name:'Deodorant',                                note:'Apply to dry skin.'},
   {name:'Get dressed — check fit',                  note:'Shoulder seams at shoulder point. No excess fabric bunching at torso. 10-second mirror check.'},
+  {name:'Clean room — 5 min tidy',                  note:'Clear surfaces, floor, and desk. Takes 5 minutes if done daily. Your environment directly affects your mood, focus, and how you carry yourself.'},
   {name:'Breakfast — hit protein',                  note:'40–60g protein. Eggs, Greek yogurt, cottage cheese, protein shake. Sets your appetite and muscle preservation for the day.'},
   {name:'Facial exercises',                         note:'3–5 minutes total. (1) Chin tucks 3×15 — pull chin straight back, hold 5s. (2) CTAR — ball/fist under chin, press down hard 5s × 10 reps. (3) Jaw clench — clench hard 10s × 5 reps, rest 5s between. (4) Tongue to palate — press flat to roof of mouth and hold 30s. Do these now while standing. Consistent daily execution over 6–12 weeks is what produces results.'},
   {name:'Drink another 500ml water',                note:'You\'re already at 1L before leaving the house. 2L to go.'},
@@ -1052,6 +1112,7 @@ const EXP_CATS = [
 let cashData = JSON.parse(localStorage.getItem('m_cash') || '{"currency":"TRY","entries":{}}');
 if(!cashData.currency) cashData.currency='TRY';
 if(!cashData.entries)  cashData.entries={};
+if(!cashData.zeroDays) cashData.zeroDays={};
 
 function saveCash(){ localStorage.setItem('m_cash',JSON.stringify(cashData)); }
 
@@ -1063,12 +1124,122 @@ function fmtAmt(n){
   if(cashData.currency==='TRY') return '₺'+n.toLocaleString('tr-TR',{minimumFractionDigits:0,maximumFractionDigits:2});
   return '$'+n.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:2});
 }
+function fmtAmtShort(n){
+  const sym=currSym();
+  if(Math.abs(n)>=1000) return sym+(n/1000).toFixed(1)+'k';
+  return sym+Math.round(n);
+}
 function dayTotal(key){ return (cashData.entries[key]||[]).reduce((s,e)=>s+e.amount,0); }
+
+function allTimeSpent(){
+  return Object.values(cashData.entries).flat().reduce((s,e)=>s+e.amount,0);
+}
+
+// ── Budget ──
+function getBudgetStats(){
+  const b=cashData.budget; if(!b) return null;
+  const today=new Date(); today.setHours(0,0,0,0);
+  const end=new Date(b.endDate); end.setHours(0,0,0,0);
+  const daysLeft=Math.max(1,Math.round((end-today)/(1000*60*60*24))+1);
+  const totalSpent=allTimeSpent();
+  const balance=b.startCash-totalSpent;
+  const spendable=b.startCash-b.savingsTarget;
+  const remainingSpendable=spendable-totalSpent;
+  const dailyBudget=remainingSpendable/daysLeft;
+  const todaySpent=dayTotal(todayKey());
+  const todayLeft=dailyBudget-todaySpent;
+  const savedSoFar=Math.max(0,balance-remainingSpendable);
+  const pctUsed=spendable>0?Math.min(100,(totalSpent/spendable)*100):0;
+  return {balance,dailyBudget,todaySpent,todayLeft,daysLeft,spendable,totalSpent,savingsTarget:b.savingsTarget,pctUsed,savedSoFar,remainingSpendable};
+}
+
+function renderBudgetSummary(){
+  const sumEl=document.getElementById('budget-summary');
+  const setupEl=document.getElementById('budget-setup');
+  const stats=getBudgetStats();
+  if(!stats){
+    sumEl.style.display='none';
+    setupEl.style.display='flex';
+    document.getElementById('budget-collapse').style.display='none';
+    return;
+  }
+  sumEl.style.display='grid';
+  // hide setup unless being edited
+  if(!setupEl.classList.contains('editing')) setupEl.style.display='none';
+  document.getElementById('budget-collapse').style.display='inline';
+
+  const sym=currSym();
+  const dlColor=stats.todayLeft>=0?'green':stats.todayLeft>-(stats.dailyBudget*0.2)?'warn':'red';
+  const balColor=stats.balance>stats.savingsTarget?'green':'red';
+  const pct=Math.min(100,stats.pctUsed).toFixed(0);
+
+  sumEl.innerHTML=`
+    <div class="bstat full">
+      <div class="bstat-val ${balColor}">${fmtAmt(Math.max(0,stats.balance))}</div>
+      <div class="bstat-label">Current balance</div>
+      <div class="bstat-bar"><div class="bstat-bar-fill${stats.pctUsed>90?' red':''}" style="width:${pct}%"></div></div>
+    </div>
+    <div class="bstat">
+      <div class="bstat-val green">${fmtAmt(stats.dailyBudget>0?stats.dailyBudget:0)}</div>
+      <div class="bstat-label">Daily budget</div>
+    </div>
+    <div class="bstat ${stats.todayLeft<0?'over':''}">
+      <div class="bstat-val ${dlColor}">${fmtAmt(Math.abs(stats.todayLeft))} ${stats.todayLeft<0?'over':'left today'}</div>
+      <div class="bstat-label">Today — spent ${fmtAmt(stats.todaySpent)}</div>
+    </div>
+    <div class="bstat">
+      <div class="bstat-val">${fmtAmt(stats.savingsTarget)}</div>
+      <div class="bstat-label">Savings goal</div>
+    </div>
+    <div class="bstat">
+      <div class="bstat-val">${stats.daysLeft}d</div>
+      <div class="bstat-label">Days remaining</div>
+    </div>
+  `;
+}
+
+function saveBudget(){
+  const start=parseFloat(document.getElementById('b-start').value);
+  const save=parseFloat(document.getElementById('b-save').value);
+  const end=document.getElementById('b-end').value;
+  if(!start||!save||!end) return;
+  cashData.budget={startCash:start,savingsTarget:save,endDate:end,setDate:todayKey()};
+  saveCash();
+  document.getElementById('budget-setup').classList.remove('editing');
+  renderBudgetSummary();
+}
+
+// Pre-fill end date to end of current month
+(function(){
+  const d=new Date(); d.setMonth(d.getMonth()+1,0);
+  document.getElementById('b-end').value=d.toISOString().split('T')[0];
+})();
+
+// If budget already set, populate fields
+if(cashData.budget){
+  document.getElementById('b-start').value=cashData.budget.startCash||'';
+  document.getElementById('b-save').value=cashData.budget.savingsTarget||'';
+  document.getElementById('b-end').value=cashData.budget.endDate||'';
+}
+
+document.getElementById('b-save-btn').addEventListener('click',saveBudget);
+document.getElementById('budget-collapse').addEventListener('click',()=>{
+  document.getElementById('budget-setup').classList.remove('editing');
+  document.getElementById('budget-setup').style.display='none';
+});
+
+// Edit budget from summary (tap balance area)
+document.getElementById('budget-summary').addEventListener('click',()=>{
+  const setup=document.getElementById('budget-setup');
+  setup.classList.add('editing');
+  setup.style.display='flex';
+});
 
 function renderCash(){
   document.getElementById('curr-try').classList.toggle('active',cashData.currency==='TRY');
   document.getElementById('curr-usd').classList.toggle('active',cashData.currency==='USD');
   document.getElementById('exp-symbol').textContent=currSym();
+  renderBudgetSummary();
   // category chips
   const chips=document.getElementById('cat-chips');
   chips.innerHTML=EXP_CATS.map(c=>`<button class="cat-chip${selCat===c.id?' sel':''}" data-cat="${c.id}">${c.label}</button>`).join('');
@@ -1090,12 +1261,13 @@ function renderCal(){
   for(let d=1;d<=daysInMo;d++){
     const key=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const total=dayTotal(key);
-    const isToday=key===todK, isSel=key===selDay, hasExp=total>0;
-    const sym=cashData.currency==='TRY'?'₺':'$';
+    const isToday=key===todK, isSel=key===selDay;
+    const hasExp=total>0, isZero=!hasExp&&cashData.zeroDays[key];
+    const sym=currSym();
     const shortAmt=total>=1000?(total/1000).toFixed(1)+'k':Math.round(total);
-    let cls='cal-day'+(hasExp?' has-exp':'')+(isSel?' selected':'');
+    let cls='cal-day'+((hasExp||isZero)?' has-exp':'')+(isSel?' selected':'');
     const dnHtml=isToday?`<div class="cal-today-dot">${d}</div>`:`<div class="cal-dn">${d}</div>`;
-    const amtHtml=hasExp?`<span class="cal-amt">${sym}${shortAmt}</span>`:'';
+    const amtHtml=hasExp?`<span class="cal-amt">${sym}${shortAmt}</span>`:isZero?`<span class="cal-zero">✓</span>`:'';
     html+=`<div class="${cls}" data-key="${key}">${dnHtml}${amtHtml}</div>`;
   }
   grid.innerHTML=html;
@@ -1117,7 +1289,8 @@ function renderDayDetail(){
   const label=selDay===todayKey()?'Today':dt.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});
   let html=`<div class="exp-day-title">${label}</div>`;
   if(!entries.length){
-    html+=`<div class="exp-day-empty">No expenses logged.</div>`;
+    const isZero=cashData.zeroDays[selDay];
+    html+=`<div class="exp-day-empty">${isZero?'Zero spend day — nothing spent.':'No expenses logged.'}</div>`;
   } else {
     html+=`<div class="exp-list">`;
     entries.forEach(e=>{
@@ -1138,7 +1311,7 @@ function renderDayDetail(){
   sec.querySelectorAll('.exp-row-del').forEach(btn=>btn.addEventListener('click',()=>{
     cashData.entries[selDay]=(cashData.entries[selDay]||[]).filter(e=>String(e.id)!==btn.dataset.id);
     if(!cashData.entries[selDay].length) delete cashData.entries[selDay];
-    saveCash(); renderCal(); renderDayDetail();
+    saveCash(); renderCal(); renderDayDetail(); renderBudgetSummary();
   }));
 }
 
@@ -1149,16 +1322,27 @@ function addExpense(){
   const key=todayKey();
   if(!cashData.entries[key]) cashData.entries[key]=[];
   cashData.entries[key].push({id:Date.now(),amount:amt,note,cat:selCat});
+  delete cashData.zeroDays[key]; // clear any zero-day marker
   saveCash();
   document.getElementById('exp-amount').value='';
   document.getElementById('exp-note').value='';
   selDay=key; calYear=new Date().getFullYear(); calMonth=new Date().getMonth();
-  renderCal(); renderDayDetail();
+  renderCal(); renderDayDetail(); renderBudgetSummary();
+}
+
+function skipToday(){
+  const key=todayKey();
+  if(dayTotal(key)>0) return; // already has expenses, skip doesn't make sense
+  cashData.zeroDays[key]=true;
+  saveCash();
+  selDay=key; calYear=new Date().getFullYear(); calMonth=new Date().getMonth();
+  renderCal(); renderDayDetail(); renderBudgetSummary();
 }
 
 document.getElementById('curr-try').addEventListener('click',()=>{cashData.currency='TRY';saveCash();renderCash();});
 document.getElementById('curr-usd').addEventListener('click',()=>{cashData.currency='USD';saveCash();renderCash();});
 document.getElementById('exp-add-btn').addEventListener('click',addExpense);
+document.getElementById('exp-skip-btn').addEventListener('click',skipToday);
 document.getElementById('exp-amount').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('exp-note').focus();});
 document.getElementById('exp-note').addEventListener('keydown',e=>{if(e.key==='Enter')addExpense();});
 document.getElementById('cal-prev').addEventListener('click',()=>{calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCal();});
