@@ -587,8 +587,6 @@
     /* ── EXERCISE CARDS ── */
     .ex-card { background:var(--glass); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; margin-bottom:10px; transition:border-color 0.2s; box-shadow:0 2px 16px rgba(0,0,0,0.22); }
     .ex-card.done { border-color:rgba(62,255,200,0.25); background:rgba(62,255,200,0.02); }
-    .ex-visual { background:rgba(255,255,255,0.02); border-bottom:1px solid var(--border); padding:10px 12px 4px; min-height:72px; display:flex; align-items:center; justify-content:center; }
-    .ex-visual svg { width:100%; height:auto; display:block; }
     .ex-body { padding:14px 16px 12px; cursor:pointer; }
     .ex-row1 { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:3px; }
     .ex-name { font-size:16px; font-weight:800; color:var(--text); letter-spacing:-0.3px; line-height:1.1; }
@@ -1236,8 +1234,7 @@ function renderLooks(){
       const isDone=!!(S.log[t]&&S.log[t]['ex-'+ex.id]);
       const el=document.createElement('div');
       el.className='ex-card'+(isDone?' done':'');
-      el.innerHTML=`<div class="ex-visual">${ex.svg}</div>
-        <div class="ex-body">
+      el.innerHTML=`<div class="ex-body">
           <div class="ex-row1">
             <div><div class="ex-name">${ex.name}</div>${ex.subname?`<div class="ex-subname">${ex.subname}</div>`:''}</div>
             <div class="ex-eff-badge">${ex.effectiveness}%</div>
