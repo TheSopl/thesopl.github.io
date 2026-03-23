@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mint-v13';
+const CACHE_NAME = 'mint-v14';
 const ASSETS = ['./', './index.html'];
 
 self.addEventListener('install', e => {

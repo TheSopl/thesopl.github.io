@@ -361,8 +361,13 @@
     .nav-item::after { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 22px; height: 2px; background: transparent; border-radius: 0 0 2px 2px; transition: background 0.2s, box-shadow 0.2s; }
     .nav-item.active { color: var(--mint); }
     .nav-item.active::after { background: var(--mint); box-shadow: 0 0 8px rgba(62,255,200,0.6); }
-    .nav-icon { font-size: 17px; line-height: 1; }
-    .nav-label { font-size: 8px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; }
+    .nav-icon { font-size: 22px; line-height: 1; }
+    .nav-label { font-size: 10px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; }
+    /* ── SUB-NAV BAR ── */
+    #subnav-bar { display:flex; gap:8px; padding:9px 18px; overflow-x:auto; -webkit-overflow-scrolling:touch; flex-shrink:0; border-bottom:1px solid var(--border); }
+    #subnav-bar::-webkit-scrollbar { display:none; }
+    .sub-pill { flex-shrink:0; padding:6px 16px; border-radius:20px; font-size:13px; font-weight:700; background:var(--glass); border:1px solid var(--border); color:var(--text2); cursor:pointer; white-space:nowrap; }
+    .sub-pill.active { background:var(--mint-dim); border-color:var(--mint-glow); color:var(--mint); }
 
     /* ── MODAL ── */
     .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 100; display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
@@ -840,7 +845,7 @@
 
   <!-- RESEARCH -->
   <div class="screen hidden" id="screen-looks">
-    <div class="topbar"><div class="topbar-inner"><h1>Research <span class="accent">Hub</span></h1></div></div>
+    <div class="topbar"><div class="topbar-inner"><h1>Research <span class="accent">Hub</span></h1><button class="signout-btn" id="more-ask-btn" style="color:var(--mint);font-size:13px;font-weight:800">Ask AI ◇</button></div></div>
     <div class="cat-row" id="cat-row"></div>
     <div class="section" id="tips-list"></div>
   </div>
@@ -970,16 +975,14 @@
     </div>
   </div>
 
+  <!-- SUB-NAV -->
+  <div id="subnav-bar" class="hidden"></div>
   <!-- NAV -->
   <nav class="nav" id="nav">
-    <div class="nav-item active" data-tab="today"><div class="nav-icon">◈</div><div class="nav-label">Today</div></div>
-    <div class="nav-item" data-tab="schedule"><div class="nav-icon">◫</div><div class="nav-label">Class</div></div>
-    <div class="nav-item" data-tab="log"><div class="nav-icon">▣</div><div class="nav-label">Log</div></div>
-    <div class="nav-item" data-tab="cash"><div class="nav-icon">◑</div><div class="nav-label">Cash</div></div>
-    <div class="nav-item" data-tab="nails"><div class="nav-icon">◒</div><div class="nav-label">Nails</div></div>
-    <div class="nav-item" data-tab="goals"><div class="nav-icon">◎</div><div class="nav-label">Goals</div></div>
-    <div class="nav-item" data-tab="chat"><div class="nav-icon">◇</div><div class="nav-label">Ask</div></div>
-    <div class="nav-item" data-tab="research"><div class="nav-icon">◉</div><div class="nav-label">Research</div></div>
+    <div class="nav-item active" data-main="today"><div class="nav-icon">◈</div><div class="nav-label">Today</div></div>
+    <div class="nav-item" data-main="me"><div class="nav-icon">◑</div><div class="nav-label">Me</div></div>
+    <div class="nav-item" data-main="cash"><div class="nav-icon">◒</div><div class="nav-label">Cash</div></div>
+    <div class="nav-item" data-main="more"><div class="nav-icon">◇</div><div class="nav-label">More</div></div>
   </nav>
 </div>
 
@@ -1705,17 +1708,58 @@ function renderLog(){
 }
 
 // ═══ TABS ═══
-let tab='today';
-const tabMap={today:'screen-today',schedule:'screen-schedule',research:'screen-looks',goals:'screen-goals',log:'screen-log',cash:'screen-cash',nails:'screen-nails'};
-const renderMap={today:renderToday,schedule:renderSchedule,research:renderLooks,goals:renderGoals,log:renderLog,cash:renderCash,nails:renderNails};
-function switchTab(t){
-  if(t==='chat'){openChat();return;}
-  tab=t;
-  Object.entries(tabMap).forEach(([k,id])=>document.getElementById(id).classList.toggle('hidden',k!==t));
-  document.querySelectorAll('.nav-item').forEach(el=>el.classList.toggle('active',el.dataset.tab===t));
-  renderMap[t]();
+let mainTab='today';
+let subs={today:'today',me:'goals'};
+const MAIN_SUBS={today:['today','schedule'],me:['goals','nails','log'],cash:[],more:[]};
+const SUB_LABELS={today:'Today',schedule:'Schedule',goals:'Goals',nails:'Nails',log:'Log'};
+const subMap={
+  today:{screen:'screen-today',render:renderToday},
+  schedule:{screen:'screen-schedule',render:renderSchedule},
+  goals:{screen:'screen-goals',render:renderGoals},
+  nails:{screen:'screen-nails',render:renderNails},
+  log:{screen:'screen-log',render:renderLog},
+  cash:{screen:'screen-cash',render:renderCash},
+  more:{screen:'screen-looks',render:renderLooks}
+};
+const ALL_SCREENS=['screen-today','screen-schedule','screen-goals','screen-nails','screen-log','screen-cash','screen-looks'];
+function _hideAll(){ALL_SCREENS.forEach(id=>{document.getElementById(id)?.classList.add('hidden');});}
+function renderSubnav(mainT){
+  const bar=document.getElementById('subnav-bar');
+  const keys=MAIN_SUBS[mainT]||[];
+  if(!keys.length){bar.classList.add('hidden');return;}
+  bar.classList.remove('hidden');bar.innerHTML='';
+  keys.forEach(sk=>{
+    const p=document.createElement('div');
+    p.className='sub-pill'+(sk===subs[mainT]?' active':'');
+    p.textContent=SUB_LABELS[sk];
+    p.addEventListener('click',()=>switchSub(mainT,sk));
+    bar.appendChild(p);
+  });
 }
-document.getElementById('nav').addEventListener('click',e=>{const it=e.target.closest('.nav-item');if(it)switchTab(it.dataset.tab);});
+function switchSub(mainT,sk){
+  subs[mainT]=sk;_hideAll();
+  const {screen,render}=subMap[sk]||{};
+  if(screen)document.getElementById(screen)?.classList.remove('hidden');
+  if(render)render();
+  renderSubnav(mainT);
+}
+function switchMain(t){
+  mainTab=t;
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.toggle('active',el.dataset.main===t));
+  _hideAll();
+  if(MAIN_SUBS[t]?.length){
+    const sk=subs[t];
+    const {screen,render}=subMap[sk]||{};
+    if(screen)document.getElementById(screen)?.classList.remove('hidden');
+    if(render)render();
+  } else {
+    const {screen,render}=subMap[t]||{};
+    if(screen)document.getElementById(screen)?.classList.remove('hidden');
+    if(render)render();
+  }
+  renderSubnav(t);
+}
+document.getElementById('nav').addEventListener('click',e=>{const it=e.target.closest('.nav-item');if(it)switchMain(it.dataset.main);});
 
 // ═══ NAIL TRACKER ═══
 const FINGER_NAMES = [
@@ -2161,9 +2205,7 @@ Be sharp, direct, no fluff. Concise and actionable. Real talk, no corporate well
 }
 
 function openChat(){
-  tab='chat';
   document.getElementById('chat-screen').classList.remove('hidden');
-  document.querySelectorAll('.nav-item').forEach(el=>el.classList.toggle('active',el.dataset.tab==='chat'));
   const key=localStorage.getItem('m_key');
   if(key){
     document.getElementById('chat-setup').style.display='none';
@@ -2176,7 +2218,7 @@ function openChat(){
   }
   adjustVP();
 }
-function closeChat(){ document.getElementById('chat-screen').classList.add('hidden'); switchTab('today'); }
+function closeChat(){ document.getElementById('chat-screen').classList.add('hidden'); switchMain(mainTab); }
 document.getElementById('chat-back').addEventListener('click',closeChat);
 
 function welcomeMsg(){
@@ -2334,7 +2376,7 @@ async function _pull(){
       localStorage.setItem('m_goals',JSON.stringify(S.goals));
       localStorage.setItem('m_nails',JSON.stringify(nailData));
       localStorage.setItem('m_cash',JSON.stringify(cashData));
-      const rf=renderMap[tab]; if(typeof rf==='function') rf();
+      const _activeSub=subs[mainTab]||mainTab; const rf=(subMap[_activeSub]||subMap[mainTab])?.render; if(typeof rf==='function') rf();
       _dot('synced');
     }
   }catch(e){ _dot('offline'); }
@@ -2375,9 +2417,11 @@ document.getElementById('auth-signup-btn').addEventListener('click',()=>_authSub
 document.getElementById('auth-pass').addEventListener('keydown',e=>{ if(e.key==='Enter') _authSubmit(false); });
 document.getElementById('auth-signout-btn').addEventListener('click',()=>_sb.auth.signOut());
 
+document.getElementById('more-ask-btn').addEventListener('click',openChat);
+
 // ═══ SW + INIT ═══
 if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
-switchTab('today');
+switchMain('today');
 initAuth();
 if(localStorage.getItem('notif_on')==='1') scheduleClassReminder();
 </script>
