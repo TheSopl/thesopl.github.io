@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mint-v16';
+const CACHE_NAME = 'mint-v17';
 const ASSETS = ['./', './index.html'];
 
 self.addEventListener('install', e => {
@@ -45,6 +45,22 @@ self.addEventListener('message', e => {
       })
     );
   }
+});
+
+// Server-sent push (from GitHub Actions cron via Supabase edge function)
+self.addEventListener('push', e => {
+  let data = { title: 'Mint', body: '' };
+  try { data = e.data?.json() ?? data; } catch(_){}
+  e.waitUntil(
+    self.registration.showNotification(data.title, {
+      body:     data.body,
+      icon:     './icon-192.png',
+      badge:    './icon-192.png',
+      tag:      'mint-push',
+      renotify: true,
+      vibrate:  [200, 100, 200]
+    })
+  );
 });
 
 // Tap notification → open / focus the app

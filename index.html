@@ -1787,9 +1787,9 @@ function compressAndAddPhoto(file){
 }
 
 // ═══ NOTIFICATIONS ═══
-// Posts a scheduled notification to the service worker.
-// The SW uses waitUntil() to stay alive until the timer fires —
-// works even when the app tab is closed (browser must still be running).
+const VAPID_PUBLIC='BCQuKz-vPlq1423gtGf4pNXHUz8xsX_Mg1oQgLp2Uz2R6T1JC11fALV4PaplCoDQpX-D9DyQxpUGcAvNvYsL-8M';
+
+// ── SW fallback (works while browser is running) ──
 async function _swNotif(id, title, body, delaySecs){
   if(!('serviceWorker' in navigator)) return false;
   try {
@@ -1800,12 +1800,66 @@ async function _swNotif(id, title, body, delaySecs){
   } catch(e){ return false; }
 }
 
+// ── True push subscription (works even when browser is killed) ──
+function _urlB64ToUint8(b64){
+  const pad='='.repeat((4-b64.length%4)%4);
+  const raw=atob((b64+pad).replace(/-/g,'+').replace(/_/g,'/'));
+  return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));
+}
+
+async function _subscribePush(){
+  if(!('serviceWorker' in navigator)||!('PushManager' in window)) return null;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const existing = await reg.pushManager.getSubscription();
+    if(existing) return existing;
+    return await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: _urlB64ToUint8(VAPID_PUBLIC)
+    });
+  } catch(e){ console.warn('Push subscribe failed:',e); return null; }
+}
+
+async function _savePushSub(sub){
+  if(!sub||!_sbUser) return;
+  // Store as JSON in cashData.pushSub so it syncs via existing _push()
+  cashData.pushSub = JSON.parse(JSON.stringify(sub));
+  saveCash();
+}
+
+// ── Test: fires after 60s via SW (works when minimized) ──
+// AND sends a server-side test push immediately via edge function
+async function testNotification(){
+  if(typeof Notification==='undefined'){ alert('Notifications not supported here.'); return; }
+  if(Notification.permission!=='granted'){
+    const p=await Notification.requestPermission();
+    if(p!=='granted'){ alert('Permission denied.'); return; }
+  }
+  // Ensure push subscription is saved
+  const sub = await _subscribePush();
+  if(sub) await _savePushSub(sub);
+
+  // SW fallback test (1 min, works while browser is running)
+  await _swNotif('test','✅ Push works!','Fired 60s after you tapped. Browser can be in background.',60);
+
+  // Server-side test push (works even if browser is killed — tests the full pipeline)
+  if(_sbUser && cashData.pushSub){
+    try {
+      await _sb.functions.invoke('send-push', { body: { test: true } });
+    } catch(e){ console.warn('Server push test failed:', e); }
+  }
+}
+
 async function scheduleClassReminder(){
   if(typeof Notification==='undefined'||Notification.permission!=='granted')return;
+  // Subscribe + save so the server-side cron can reach this device
+  const sub = await _subscribePush();
+  if(sub) await _savePushSub(sub);
+  // SW fallback: also schedule via SW in case it fires while browser is open
   const now=new Date(), next=new Date();
   next.setHours(23,0,0,0); if(next<=now) next.setDate(next.getDate()+1);
   const delaySecs=Math.round((next-now)/1000);
-  const tmr=new Date(next); tmr.setDate(tmr.getDate()+1); // "tomorrow" relative to 11 PM
+  const tmr=new Date(next); tmr.setDate(tmr.getDate()+1);
   const cls=SCHEDULE[tmr.getDay()]||[];
   if(!cls.length) return;
   const sp=sleepPlan();
@@ -1813,19 +1867,16 @@ async function scheduleClassReminder(){
   await _swNotif('class-reminder','Classes tomorrow 🎒',`${names}\nSleep by ${sp.bed} → wake ${sp.wake}`,delaySecs);
 }
 
-async function testNotification(){
-  if(typeof Notification==='undefined'){ alert('Notifications not supported here.'); return; }
-  if(Notification.permission!=='granted'){
-    const p=await Notification.requestPermission();
-    if(p!=='granted'){ alert('Permission denied.'); return; }
-  }
-  const ok=await _swNotif('test','✅ It works!','Notification fired 1 min after you tapped. App was closed.',60);
-  if(!ok) alert('Service worker not ready — try again in a second.');
-}
-
 async function toggleNotifications(){
   if(typeof Notification==='undefined'){alert('Notifications not supported on this device.');return;}
   if(Notification.permission==='granted'&&localStorage.getItem('notif_on')==='1'){
+    // Unsubscribe from push
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      if(sub) await sub.unsubscribe();
+    } catch(e){}
+    cashData.pushSub = null; saveCash();
     localStorage.removeItem('notif_on'); renderLog(); return;
   }
   const perm=await Notification.requestPermission();

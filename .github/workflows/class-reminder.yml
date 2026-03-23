@@ -1,0 +1,23 @@
+name: Class Reminder Push (11 PM Turkey)
+
+on:
+  schedule:
+    # 20:00 UTC = 23:00 Turkey (UTC+3)
+    - cron: '0 20 * * *'
+  workflow_dispatch:   # manual trigger for testing
+
+jobs:
+  send-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send class reminder push notifications
+        run: |
+          curl -s -X POST \
+            "https://qdyfeqlyyjgunmdnnvah.supabase.co/functions/v1/send-push" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{}' | tee /tmp/result.json
+
+          cat /tmp/result.json
+          # Fail the job if the function returned an error key
+          if grep -q '"error"' /tmp/result.json; then exit 1; fi
