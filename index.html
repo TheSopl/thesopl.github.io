@@ -993,7 +993,8 @@
       <div class="section-label">🔔 Reminders</div>
       <div class="card" style="padding:14px">
         <button class="notif-btn" id="notif-btn">Enable class reminders at 11 PM</button>
-        <div style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.5">Notifies you of tomorrow's classes + recommended sleep time. Requires the app to be open or running in background.</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.5">Fires at 11 PM with tomorrow's classes + sleep plan. Works when app is minimized. Add to home screen for best reliability.</div>
+        <button id="notif-test-btn" style="margin-top:10px;width:100%;padding:10px;border-radius:var(--r-xs);background:var(--glass);border:1px solid var(--border);color:var(--text3);font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">🧪 Test — fires in 60 seconds</button>
       </div>
     </div>
   </div>
@@ -1786,33 +1787,49 @@ function compressAndAddPhoto(file){
 }
 
 // ═══ NOTIFICATIONS ═══
-let _notifTimer=null;
-function scheduleClassReminder(){
-  if(typeof Notification==='undefined'||Notification.permission!=='granted')return;
-  clearTimeout(_notifTimer);
-  const now=new Date(),next=new Date();
-  next.setHours(23,0,0,0);if(next<=now)next.setDate(next.getDate()+1);
-  _notifTimer=setTimeout(()=>{
-    const tmr=new Date();tmr.setDate(tmr.getDate()+1);
-    const cls=SCHEDULE[tmr.getDay()]||[];
-    if(cls.length){
-      const sp=sleepPlan();
-      const names=[...new Set(cls.map(c=>c.name))].join(', ');
-      new Notification('Classes tomorrow 🎒',{
-        body:`${names}\nSleep by ${sp.bed} → wake ${sp.wake}`,
-        icon:'./icon-192.png',tag:'class-reminder'
-      });
-    }
-    scheduleClassReminder();
-  },next-now);
+// Posts a scheduled notification to the service worker.
+// The SW uses waitUntil() to stay alive until the timer fires —
+// works even when the app tab is closed (browser must still be running).
+async function _swNotif(id, title, body, delaySecs){
+  if(!('serviceWorker' in navigator)) return false;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    if(!reg.active) return false;
+    reg.active.postMessage({ type:'SCHEDULE_NOTIF', id, title, body, delaySecs });
+    return true;
+  } catch(e){ return false; }
 }
+
+async function scheduleClassReminder(){
+  if(typeof Notification==='undefined'||Notification.permission!=='granted')return;
+  const now=new Date(), next=new Date();
+  next.setHours(23,0,0,0); if(next<=now) next.setDate(next.getDate()+1);
+  const delaySecs=Math.round((next-now)/1000);
+  const tmr=new Date(next); tmr.setDate(tmr.getDate()+1); // "tomorrow" relative to 11 PM
+  const cls=SCHEDULE[tmr.getDay()]||[];
+  if(!cls.length) return;
+  const sp=sleepPlan();
+  const names=[...new Set(cls.map(c=>c.name))].join(', ');
+  await _swNotif('class-reminder','Classes tomorrow 🎒',`${names}\nSleep by ${sp.bed} → wake ${sp.wake}`,delaySecs);
+}
+
+async function testNotification(){
+  if(typeof Notification==='undefined'){ alert('Notifications not supported here.'); return; }
+  if(Notification.permission!=='granted'){
+    const p=await Notification.requestPermission();
+    if(p!=='granted'){ alert('Permission denied.'); return; }
+  }
+  const ok=await _swNotif('test','✅ It works!','Notification fired 1 min after you tapped. App was closed.',60);
+  if(!ok) alert('Service worker not ready — try again in a second.');
+}
+
 async function toggleNotifications(){
   if(typeof Notification==='undefined'){alert('Notifications not supported on this device.');return;}
   if(Notification.permission==='granted'&&localStorage.getItem('notif_on')==='1'){
-    localStorage.removeItem('notif_on');clearTimeout(_notifTimer);renderLog();return;
+    localStorage.removeItem('notif_on'); renderLog(); return;
   }
   const perm=await Notification.requestPermission();
-  if(perm==='granted'){localStorage.setItem('notif_on','1');scheduleClassReminder();}
+  if(perm==='granted'){ localStorage.setItem('notif_on','1'); scheduleClassReminder(); }
   renderLog();
 }
 
@@ -2846,6 +2863,11 @@ if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').cat
 switchMain('today');
 initAuth();
 if(localStorage.getItem('notif_on')==='1') scheduleClassReminder();
+document.getElementById('notif-test-btn')?.addEventListener('click',async()=>{
+  const btn=document.getElementById('notif-test-btn');
+  await testNotification();
+  if(btn){btn.textContent='⏱ Firing in 60s — you can close the app';btn.disabled=true;setTimeout(()=>{btn.textContent='🧪 Test — fires in 60 seconds';btn.disabled=false;},65000);}
+});
 </script>
 </body>
 </html>
