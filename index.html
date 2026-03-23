@@ -361,8 +361,8 @@
     .nav-item::after { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 22px; height: 2px; background: transparent; border-radius: 0 0 2px 2px; transition: background 0.2s, box-shadow 0.2s; }
     .nav-item.active { color: var(--mint); }
     .nav-item.active::after { background: var(--mint); box-shadow: 0 0 8px rgba(62,255,200,0.6); }
-    .nav-icon { font-size: 19px; line-height: 1; }
-    .nav-label { font-size: 9px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+    .nav-icon { font-size: 17px; line-height: 1; }
+    .nav-label { font-size: 8px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; }
 
     /* ── MODAL ── */
     .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 100; display: flex; align-items: flex-end; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
@@ -719,6 +719,40 @@
     .exp-day-total { display:flex; justify-content:space-between; align-items:center; padding:13px 14px; background:var(--glass2); border-radius:var(--r-sm); border:1px solid var(--border); }
     .exp-day-total-label { font-size:13px; color:var(--text2); font-weight:600; }
     .exp-day-total-val { font-size:17px; font-weight:800; color:var(--mint); }
+    /* ── SCHEDULE ── */
+    .sch-day-row { display:flex; gap:8px; padding:0 20px 16px; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    .sch-day-row::-webkit-scrollbar { display:none; }
+    .sch-day-pill { flex-shrink:0; padding:7px 16px; border-radius:30px; font-size:13px; font-weight:700; background:var(--glass); border:1px solid var(--border); color:var(--text2); cursor:pointer; }
+    .sch-day-pill.active { background:var(--mint-dim); border-color:var(--mint-glow); color:var(--mint); }
+    .sch-day-pill.today { font-style:italic; }
+    .class-card { display:flex; align-items:stretch; gap:0; background:var(--glass); border:1px solid var(--border); border-radius:var(--r-sm); margin:0 20px 8px; overflow:hidden; }
+    .class-card.online { border-color:rgba(62,255,200,0.18); }
+    .class-time-col { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:12px 14px; min-width:58px; border-right:1px solid var(--border); gap:2px; }
+    .class-time-start { font-size:13px; font-weight:700; color:var(--text); }
+    .class-time-end { font-size:11px; color:var(--text3); }
+    .class-info { flex:1; padding:12px 14px; display:flex; flex-direction:column; gap:3px; justify-content:center; }
+    .class-name { font-size:14px; font-weight:600; color:var(--text); }
+    .class-loc { font-size:11px; color:var(--text3); display:flex; align-items:center; gap:4px; }
+    .class-badge { font-size:10px; font-weight:800; letter-spacing:.3px; padding:2px 7px; border-radius:20px; margin-left:auto; align-self:flex-start; flex-shrink:0; }
+    .class-badge.online { background:rgba(62,255,200,0.12); color:var(--mint); border:none; }
+    .class-badge.room { background:var(--glass2); color:var(--text3); border:none; }
+    .sch-empty { font-size:14px; color:var(--text3); text-align:center; padding:40px 0; }
+    /* up-next card on Today */
+    .up-next-card { margin:0 20px 12px; background:var(--glass); border:1px solid var(--border); border-radius:var(--r); padding:14px 16px; display:flex; align-items:center; gap:14px; }
+    .up-next-card.online { border-color:rgba(62,255,200,0.2); }
+    .up-next-label { font-size:10px; font-weight:800; color:var(--text3); letter-spacing:.5px; text-transform:uppercase; margin-bottom:3px; }
+    .up-next-name { font-size:16px; font-weight:700; color:var(--text); }
+    .up-next-meta { font-size:12px; color:var(--text2); margin-top:2px; }
+    .up-next-time { font-size:22px; font-weight:800; color:var(--mint); letter-spacing:-0.5px; line-height:1; }
+    .up-next-unit { font-size:10px; color:var(--text3); font-weight:600; letter-spacing:.3px; text-align:center; }
+    /* laundry card */
+    .laundry-card { margin:0 20px 12px; background:var(--glass); border:1px solid var(--border); border-radius:var(--r); padding:14px 16px; display:flex; align-items:center; gap:14px; }
+    .laundry-icon { font-size:24px; line-height:1; }
+    .laundry-info { flex:1; }
+    .laundry-title { font-size:14px; font-weight:600; color:var(--text); }
+    .laundry-sub { font-size:12px; color:var(--text2); margin-top:2px; }
+    .laundry-btn { background:var(--mint-dim); border:1px solid var(--mint-glow); border-radius:var(--r-xs); padding:8px 14px; font-size:12px; font-weight:700; color:var(--mint); cursor:pointer; white-space:nowrap; font-family:inherit; flex-shrink:0; }
+    .laundry-btn:active { background:var(--mint-glow); }
   </style>
 </head>
 <body>
@@ -749,9 +783,18 @@
       <div class="done-banner-icon">✦</div>
       <div><div class="done-banner-text">All done.</div><div class="done-banner-sub">Consistency is the whole game.</div></div>
     </div>
+    <div id="up-next-card" style="display:none"></div>
+    <div id="laundry-card"></div>
     <div class="section"><div class="section-label">☀️ Morning</div><div class="card" id="cl-morning"></div></div>
     <div class="section"><div class="section-label">⚡ During the day</div><div class="card" id="cl-day"></div></div>
     <div class="section"><div class="section-label">🌙 Tonight</div><div class="card" id="cl-night"></div></div>
+  </div>
+
+  <!-- SCHEDULE -->
+  <div class="screen hidden" id="screen-schedule">
+    <div class="topbar"><div class="topbar-inner"><h1>My <span class="accent">Schedule</span></h1></div></div>
+    <div class="sch-day-row" id="sch-day-row"></div>
+    <div id="sch-classes"></div>
   </div>
 
   <!-- LOOKS -->
@@ -868,6 +911,7 @@
   <!-- NAV -->
   <nav class="nav" id="nav">
     <div class="nav-item active" data-tab="today"><div class="nav-icon">◈</div><div class="nav-label">Today</div></div>
+    <div class="nav-item" data-tab="schedule"><div class="nav-icon">◫</div><div class="nav-label">Class</div></div>
     <div class="nav-item" data-tab="looks"><div class="nav-icon">◉</div><div class="nav-label">Looks</div></div>
     <div class="nav-item" data-tab="goals"><div class="nav-icon">◎</div><div class="nav-label">Goals</div></div>
     <div class="nav-item" data-tab="cash"><div class="nav-icon">◑</div><div class="nav-label">Cash</div></div>
@@ -1125,6 +1169,38 @@ const EXERCISES = [
   },
 ];
 
+// ─── SCHEDULE ───────────────────────────────────────────────────────────────
+const SCHEDULE = {
+  2:[ // Tuesday
+    {name:'English',           online:true,  start:'08:30',end:'10:20',loc:'MS Teams'},
+    {name:'Programming 2',     online:false, start:'09:30',end:'11:20',loc:'D303'},
+    {name:'Calculus 2',        online:false, start:'13:30',end:'16:20',loc:'D406'},
+    {name:'Calculus 2',        online:false, start:'16:30',end:'18:20',loc:'D405'},
+  ],
+  4:[ // Thursday
+    {name:'Intro to Optimization',online:false,start:'15:30',end:'18:20',loc:'D301'},
+  ],
+  5:[ // Friday
+    {name:'Trends in Literature',  online:true, start:'09:30',end:'12:20',loc:'MS Teams'},
+    {name:'Programming 2',         online:false,start:'14:30',end:'16:20',loc:'USC202'},
+    {name:'Differential Equations',online:false,start:'15:30',end:'18:20',loc:'D301'},
+  ],
+};
+function schMins(t){const[h,m]=t.split(':').map(Number);return h*60+m;}
+function nowMins(){const n=new Date();return n.getHours()*60+n.getMinutes();}
+function todayDow(){return new Date().getDay();}
+function todayClasses(){return SCHEDULE[todayDow()]||[];}
+function getNextClass(){const now=nowMins();return todayClasses().find(c=>schMins(c.end)>now)||null;}
+// ─── LAUNDRY ─────────────────────────────────────────────────────────────────
+// Stored inside cashData.laundry to avoid needing a new DB column
+function getLaundry(){return cashData.laundry||(cashData.laundry={lastWash:null});}
+function markLaundry(){getLaundry().lastWash=todayKey();saveCash();renderToday();}
+function nextWashDate(from){
+  const d=new Date(from||Date.now()); const dow=d.getDay();
+  const days=dow===1?7:(8-dow)%7||7;
+  d.setDate(d.getDate()+days); return d.toISOString().split('T')[0];
+}
+// ─────────────────────────────────────────────────────────────────────────────
 function daysFromNow(n) { const d=new Date(); d.setDate(d.getDate()+n); return d.toISOString().split('T')[0]; }
 
 const DEFAULT_GOALS = [
@@ -1204,6 +1280,50 @@ function renderToday(){
   document.getElementById('total-n').textContent=habitItems.length;
   document.getElementById('pfill').style.width=(done/habitItems.length*100)+'%';
   document.getElementById('done-banner').classList.toggle('hidden',done<habitItems.length);
+  // up-next class
+  const unEl=document.getElementById('up-next-card');
+  const nc=getNextClass();
+  if(nc&&unEl){
+    const minsLeft=schMins(nc.start)-nowMins();
+    const started=nowMins()>=schMins(nc.start);
+    const minsEnd=schMins(nc.end)-nowMins();
+    const displayMins=started?minsEnd:minsLeft;
+    const displayLabel=started?'ends in':'starts in';
+    const hrs=Math.floor(Math.abs(displayMins)/60);
+    const mins=Math.abs(displayMins)%60;
+    const timeStr=hrs>0?`${hrs}h ${mins}m`:`${mins}m`;
+    unEl.style.display='';
+    unEl.innerHTML=`<div class="up-next-card${nc.online?' online':''}">
+      <div style="flex:1">
+        <div class="up-next-label">▸ ${started?'In class':'Up next'}</div>
+        <div class="up-next-name">${nc.name}</div>
+        <div class="up-next-meta">${nc.start}–${nc.end} · ${nc.loc}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="up-next-time">${timeStr}</div>
+        <div class="up-next-unit">${displayLabel}</div>
+      </div>
+    </div>`;
+  } else if(unEl) { unEl.style.display='none'; }
+  // laundry card
+  const lEl=document.getElementById('laundry-card');
+  if(lEl){
+    const ld=getLaundry();
+    const washedToday=ld.lastWash===todayKey();
+    const nxt=ld.lastWash?nextWashDate(ld.lastWash):null;
+    const nxtFmt=nxt?new Date(nxt+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}):null;
+    const daysUntil=nxt?Math.round((new Date(nxt+'T12:00:00')-new Date())/(864e5)):null;
+    lEl.innerHTML=`<div class="laundry-card">
+      <div class="laundry-icon">🧺</div>
+      <div class="laundry-info">
+        <div class="laundry-title">${washedToday?'Washed today ✓':nxt?`Next wash: ${nxtFmt}`:'No laundry logged yet'}</div>
+        <div class="laundry-sub">${washedToday&&nxt?`Next: ${nxtFmt} (${daysUntil}d)`:ld.lastWash&&!washedToday?`Last: ${ld.lastWash}`:''}</div>
+      </div>
+      ${!washedToday?`<button class="laundry-btn" id="laundry-mark-btn">Washed today</button>`:''}
+    </div>`;
+    const btn=document.getElementById('laundry-mark-btn');
+    if(btn) btn.addEventListener('click',markLaundry);
+  }
   ['morning','day','night'].forEach(sec=>{
     const el=document.getElementById('cl-'+sec); el.innerHTML='';
     CHECKLIST.filter(c=>c.sec===sec).forEach(item=>{
@@ -1290,6 +1410,53 @@ function renderLooks(){
   });
 }
 
+// ═══ SCHEDULE ═══
+const DAY_NAMES=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const FULL_DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+let schDay=todayDow();
+function renderSchedule(){
+  // day pills
+  const row=document.getElementById('sch-day-row'); row.innerHTML='';
+  [1,2,3,4,5].forEach(d=>{
+    const p=document.createElement('div');
+    const isToday=d===todayDow();
+    p.className='sch-day-pill'+(d===schDay?' active':'')+(isToday?' today':'');
+    p.textContent=DAY_NAMES[d]+(isToday?' ·':'');
+    p.addEventListener('click',()=>{schDay=d;renderSchedule();});
+    row.appendChild(p);
+  });
+  // class list
+  const container=document.getElementById('sch-classes'); container.innerHTML='';
+  const classes=SCHEDULE[schDay]||[];
+  if(!classes.length){
+    const empty=document.createElement('div');
+    empty.className='sch-empty';
+    empty.textContent='No classes on '+FULL_DAYS[schDay];
+    container.appendChild(empty);
+    return;
+  }
+  const now=nowMins();
+  classes.forEach(c=>{
+    const isPast=schDay===todayDow()&&schMins(c.end)<now;
+    const isNow=schDay===todayDow()&&schMins(c.start)<=now&&schMins(c.end)>now;
+    const el=document.createElement('div');
+    el.className='class-card'+(c.online?' online':'');
+    el.style.opacity=isPast?'0.45':'1';
+    el.innerHTML=`<div class="class-time-col">
+      <div class="class-time-start">${c.start}</div>
+      <div class="class-time-end">${c.end}</div>
+    </div>
+    <div class="class-info">
+      <div class="class-name">${c.name}${isNow?' <span style="font-size:10px;color:var(--mint);font-weight:800">▶ NOW</span>':''}</div>
+      <div class="class-loc">📍 ${c.loc}</div>
+    </div>
+    <div style="padding:12px 12px 12px 0;display:flex;align-items:flex-start">
+      <span class="class-badge ${c.online?'online':'room'}">${c.online?'Online':'Room'}</span>
+    </div>`;
+    container.appendChild(el);
+  });
+}
+
 // ═══ GOALS ═══
 function renderGoals(){
   const list=document.getElementById('goals-list'); list.innerHTML='';
@@ -1323,8 +1490,8 @@ function renderStats(){
 
 // ═══ TABS ═══
 let tab='today';
-const tabMap={today:'screen-today',looks:'screen-looks',goals:'screen-goals',stats:'screen-stats',cash:'screen-cash',nails:'screen-nails'};
-const renderMap={today:renderToday,looks:renderLooks,goals:renderGoals,stats:renderStats,cash:renderCash,nails:renderNails};
+const tabMap={today:'screen-today',schedule:'screen-schedule',looks:'screen-looks',goals:'screen-goals',stats:'screen-stats',cash:'screen-cash',nails:'screen-nails'};
+const renderMap={today:renderToday,schedule:renderSchedule,looks:renderLooks,goals:renderGoals,stats:renderStats,cash:renderCash,nails:renderNails};
 function switchTab(t){
   if(t==='chat'){openChat();return;}
   tab=t;
