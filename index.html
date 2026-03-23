@@ -115,7 +115,7 @@
     .card + .card { margin-top: 8px; }
 
     /* ── SECTIONS ── */
-    .section { padding: 0 18px; margin-bottom: 28px; }
+    .section { padding: 0 18px; margin-bottom: 20px; }
     .section-label {
       font-size: 10.5px;
       font-weight: 700;
@@ -153,7 +153,7 @@
       display: flex;
       align-items: center;
       gap: 14px;
-      padding: 15px 16px;
+      padding: 11px 16px;
       cursor: pointer;
       user-select: none;
       position: relative;
@@ -199,7 +199,8 @@
       transition: color 0.2s;
     }
     .habit-item.done .habit-name { color: var(--text3); text-decoration: line-through; }
-    .habit-sub { font-size: 11.5px; color: rgba(240,240,250,0.35); margin-top: 2px; font-weight: 400; }
+    .habit-sub { font-size: 11px; color: rgba(240,240,250,0.32); margin-top: 1px; font-weight: 400; line-height: 1.3; }
+    .habit-item.done .habit-sub { display: none; }
 
     .streak-tag {
       font-size: 11px;
@@ -228,13 +229,6 @@
     .done-banner-text { font-size: 14px; font-weight: 700; color: var(--mint); }
     .done-banner-sub  { font-size: 11.5px; color: var(--text2); margin-top: 1px; }
 
-    /* ── ROUTINE ── */
-    .routine-step { display:flex; align-items:flex-start; gap:13px; padding:13px 16px; border-bottom:1px solid var(--border); }
-    .routine-step:last-child { border-bottom:none; }
-    .routine-num { width:22px; height:22px; min-width:22px; border-radius:50%; background:var(--mint-dim); border:1px solid rgba(62,255,200,0.25); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:var(--mint); margin-top:1px; }
-    .routine-body { flex:1; }
-    .routine-name { font-size:13.5px; font-weight:600; color:var(--text); }
-    .routine-note { font-size:11.5px; color:var(--text2); margin-top:2px; line-height:1.4; }
 
     /* ── TIPS ── */
     .cat-row { display: flex; gap: 6px; overflow-x: auto; padding: 0 18px 12px; -webkit-overflow-scrolling: touch; }
@@ -647,12 +641,11 @@
     .nm-btn-ghost { background:var(--glass2); border:1px solid var(--border); color:var(--text2); }
     .nm-btn-cancel { background:none; border:none; color:var(--text3); font-size:13px; padding:6px; }
     /* ── EXPENSE TRACKER ── */
-    .curr-row { display:flex; gap:8px; padding:0 20px 16px; }
-    .curr-btn { flex:1; padding:10px; border-radius:var(--r-sm); border:1px solid var(--border); background:none; color:var(--text2); font-size:14px; font-weight:600; font-family:inherit; cursor:pointer; transition:all 0.15s; }
-    .curr-btn.active { background:var(--mint-dim); border-color:rgba(62,255,200,0.3); color:var(--mint); }
     .exp-add-card { margin:0 20px 16px; padding:14px; background:var(--glass); border:1px solid var(--border); border-radius:var(--r); display:flex; flex-direction:column; gap:10px; }
     .exp-amount-row { display:flex; gap:10px; align-items:center; }
-    .exp-symbol { font-size:22px; font-weight:700; color:var(--mint); flex-shrink:0; }
+    .exp-symbol { font-size:18px; font-weight:800; color:var(--mint); flex-shrink:0; background:var(--mint-dim); border:1px solid rgba(62,255,200,0.2); border-radius:var(--r-xs); padding:6px 11px; cursor:pointer; font-family:inherit; transition:background 0.15s; letter-spacing:0; }
+    .exp-symbol:active { background:rgba(62,255,200,0.15); }
+    .ex-yt-btn { display:inline-flex; align-items:center; gap:6px; margin-top:10px; padding:7px 14px; background:rgba(255,100,100,0.08); border:1px solid rgba(255,100,100,0.2); border-radius:20px; color:#ff8080; font-size:12px; font-weight:700; text-decoration:none; }
     .exp-amount-input { flex:1; background:none; border:none; outline:none; font-size:30px; font-weight:700; color:var(--text); font-family:inherit; width:100%; min-width:0; }
     .exp-amount-input::placeholder { color:var(--text3); }
     .exp-note-input { background:none; border:none; outline:none; font-size:14px; color:var(--text2); font-family:inherit; border-top:1px solid var(--border); padding-top:10px; width:100%; }
@@ -789,11 +782,6 @@
   <!-- CASH -->
   <div class="screen hidden" id="screen-cash">
     <div class="topbar"><div class="topbar-inner"><h1>My <span class="accent">Cash</span></h1></div></div>
-    <div class="curr-row">
-      <button class="curr-btn active" id="curr-try">₺ Turkish Lira</button>
-      <button class="curr-btn" id="curr-usd">$ USD</button>
-    </div>
-
     <!-- Budget summary (shown when budget is set) -->
     <div id="budget-summary" class="budget-summary" style="display:none"></div>
 
@@ -828,7 +816,7 @@
 
     <div class="exp-add-card">
       <div class="exp-amount-row">
-        <span class="exp-symbol" id="exp-symbol">₺</span>
+        <button class="exp-symbol" id="exp-symbol">₺</button>
         <input class="exp-amount-input" id="exp-amount" type="number" inputmode="decimal" placeholder="0">
       </div>
       <input class="exp-note-input" id="exp-note" type="text" placeholder="What was it for?">
@@ -1086,8 +1074,7 @@ const EXERCISES = [
     study:'Multiple physiotherapy RCTs — significant FHP correction in 4–8 weeks.',
     cue:'Pull chin straight BACK. Head stays level. Brief double chin. Hold 5s.',
     result:'Sharper neck-jaw angle visible in photos within 2–4 weeks.',
-    yt:'https://www.youtube.com/watch?v=u8C5LgpK3r4',
-    svg:`<svg viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="75" cy="22" rx="16" ry="18" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/><rect x="69" y="38" width="12" height="20" rx="6" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/><path d="M95 62 Q80 56 71 62 Q60 66 42 60" stroke="rgba(255,255,255,0.12)" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M74 43 L48 43 L54 39 M48 43 L54 47" stroke="#3effc8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><text x="8" y="47" fill="#3effc8" font-size="9" font-weight="700" font-family="sans-serif">← BACK</text><text x="8" y="76" fill="rgba(255,255,255,0.22)" font-size="7.5" font-family="sans-serif">side view</text></svg>`
+    yt:'https://www.youtube.com/watch?v=u8C5LgpK3r4'
   },
   {
     id:'ctar', name:'CTAR', subname:'Chin Tuck Against Resistance', target:'Suprahyoid muscles · jaw floor (mylohyoid)',
@@ -1095,8 +1082,7 @@ const EXERCISES = [
     study:'Yoon et al. 2014, Sze et al. 2016 — superior suprahyoid activation vs standard chin tuck.',
     cue:'Fist or ball under chin. Press chin DOWN hard into it. Hold 5s. Don\'t let it drop.',
     result:'Submental tightening + jawline definition in 6–12 weeks.',
-    yt:'https://www.youtube.com/watch?v=h0ZrjeUX1jA',
-    svg:`<svg viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="60" cy="20" rx="16" ry="18" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/><rect x="54" y="36" width="12" height="16" rx="6" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/><ellipse cx="60" cy="62" rx="16" ry="9" fill="rgba(62,255,200,0.06)" stroke="rgba(62,255,200,0.45)" stroke-width="1.5"/><text x="51" y="66" fill="rgba(62,255,200,0.75)" font-size="8" font-family="sans-serif">fist</text><path d="M60 54 L60 42 L56 48 M60 42 L64 48" stroke="#3effc8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><text x="74" y="50" fill="#3effc8" font-size="9" font-weight="700" font-family="sans-serif">↓ press</text><text x="8" y="76" fill="rgba(255,255,255,0.22)" font-size="7.5" font-family="sans-serif">side view</text></svg>`
+    yt:'https://www.youtube.com/watch?v=h0ZrjeUX1jA'
   },
   {
     id:'jaw-clench', name:'Isometric Jaw Clench', target:'Masseter · jaw angle width',
@@ -1104,8 +1090,7 @@ const EXERCISES = [
     study:'Takano et al. 2021 RCT — significant masseter thickness increase after 4 weeks.',
     cue:'Clench BACK teeth as hard as possible. Hold 10s. Rest 5s between. Never grind.',
     result:'Masseter thickness at 4 weeks. Visible jaw angle width at 6–12 months.',
-    yt:'https://www.youtube.com/watch?v=5C_Pv4OOBLY',
-    svg:`<svg viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="60" cy="40" rx="32" ry="30" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/><ellipse cx="33" cy="38" rx="9" ry="12" fill="rgba(62,255,200,0.07)" stroke="rgba(62,255,200,0.45)" stroke-width="1.5"/><ellipse cx="87" cy="38" rx="9" ry="12" fill="rgba(62,255,200,0.07)" stroke="rgba(62,255,200,0.45)" stroke-width="1.5"/><path d="M22 38 L14 38 L20 34 M14 38 L20 42" stroke="#3effc8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M98 38 L106 38 L100 34 M106 38 L100 42" stroke="#3effc8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><text x="28" y="74" fill="rgba(255,255,255,0.22)" font-size="7.5" font-family="sans-serif">front view — masseter muscles</text></svg>`
+    yt:'https://www.youtube.com/watch?v=5C_Pv4OOBLY'
   },
   {
     id:'shaker', name:'Head Lift', subname:'Shaker Exercise', target:'Suprahyoid complex · anterior neck',
@@ -1113,8 +1098,7 @@ const EXERCISES = [
     study:'Shaker et al. — RCT confirmed significant suprahyoid muscle strengthening and hyoid excursion.',
     cue:'Lie flat on back. Lift ONLY your head off floor. Shoulders stay down. Hold 1 min.',
     result:'Anterior neck tightening visible at 4–8 weeks.',
-    yt:'https://www.youtube.com/watch?v=x9sno_yNgaw',
-    svg:`<svg viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="66" x2="112" y2="66" stroke="rgba(255,255,255,0.08)" stroke-width="2"/><rect x="25" y="58" width="70" height="10" rx="5" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/><ellipse cx="22" cy="44" rx="14" ry="15" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/><path d="M22 59 L22 49 L18 55 M22 49 L26 55" stroke="#3effc8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><text x="40" y="52" fill="#3effc8" font-size="9" font-weight="700" font-family="sans-serif">head only ↑</text><text x="8" y="77" fill="rgba(255,255,255,0.22)" font-size="7.5" font-family="sans-serif">lying flat — shoulders stay down</text></svg>`
+    yt:'https://www.youtube.com/watch?v=x9sno_yNgaw'
   },
   {
     id:'lateral-neck', name:'Lateral Neck Isometric', target:'SCM · diagonal jaw-framing muscle',
@@ -1122,16 +1106,14 @@ const EXERCISES = [
     study:'Isometric neck resistance protocol — established strength and hypertrophy mechanism.',
     cue:'Palm flat on side of head. Push head into palm — don\'t let it move. Hold 5s. Switch sides.',
     result:'SCM definition adds visual jaw framing over 6–8 weeks.',
-    yt:'https://www.youtube.com/watch?v=Us-zefb-FF4',
-    svg:`<svg viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="50" cy="26" rx="18" ry="20" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/><rect x="42" y="44" width="16" height="24" rx="8" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/><rect x="80" y="16" width="22" height="26" rx="7" fill="rgba(62,255,200,0.06)" stroke="rgba(62,255,200,0.45)" stroke-width="1.5"/><text x="82" y="32" fill="rgba(62,255,200,0.75)" font-size="8" font-family="sans-serif">palm</text><path d="M78 28 L70 28 L74 24 M70 28 L74 32" stroke="#3effc8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><text x="8" y="76" fill="rgba(255,255,255,0.22)" font-size="7.5" font-family="sans-serif">front view — isometric press</text></svg>`
+    yt:'https://www.youtube.com/watch?v=Us-zefb-FF4'
   },
   {
     id:'jaw-open', name:'Speed Jaw-Opening', target:'Suprahyoid fast-twitch fibers · hyoid elevation',
     sets:3, reps:20, hold:'explosive', freq:'2× daily', effectiveness:68, evidence:'RCT proven',
     study:'Matsubara et al. 2018 (Clinical Interventions in Aging) — significant increase in resting hyoid position and hyoid elevation velocity after 4 weeks.',
     cue:'Open mouth as FAST and as WIDE as possible — explosive speed, not slow. 20 rapid reps, 10s rest between sets.',
-    result:'Higher resting hyoid position → sharper neck-jaw angle at 4–6 weeks.',
-    svg:`<svg viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="68" cy="20" rx="16" ry="18" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/><rect x="62" y="36" width="12" height="16" rx="6" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/><path d="M54 38 Q60 50 70 46" stroke="rgba(255,255,255,0.18)" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M61 38 L61 50 L57 46 M61 50 L65 46" stroke="#3effc8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><line x1="24" y1="38" x2="40" y2="38" stroke="#3effc8" stroke-width="1.5" stroke-linecap="round"/><line x1="27" y1="43" x2="40" y2="43" stroke="#3effc8" stroke-width="1" stroke-linecap="round" opacity="0.5"/><line x1="30" y1="48" x2="40" y2="48" stroke="#3effc8" stroke-width="0.8" stroke-linecap="round" opacity="0.25"/><text x="8" y="70" fill="#3effc8" font-size="9" font-weight="700" font-family="sans-serif">FAST ×20</text><text x="8" y="77" fill="rgba(255,255,255,0.22)" font-size="7.5" font-family="sans-serif">side view</text></svg>`
+    result:'Higher resting hyoid position → sharper neck-jaw angle at 4–6 weeks.'
   },
   {
     id:'jaw-resist', name:'Resistive Jaw-Opening', subname:'Submandibular Push',
@@ -1139,8 +1121,7 @@ const EXERCISES = [
     sets:3, reps:12, hold:'5s', freq:'2× daily', effectiveness:75, evidence:'Strong',
     study:'Scientific Reports 2020/2021 — superior suprahyoid selectivity vs Shaker; 50% less unwanted SCM co-activation. Significant muscle thickness increase confirmed.',
     cue:'Place fist under your chin. Try to OPEN your jaw (push chin down) against your fist — resist completely. Isometric. Hold 5s.',
-    result:'Tighter submental floor, sharper jaw-neck boundary at 6–8 weeks.',
-    svg:`<svg viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="58" cy="18" rx="16" ry="17" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/><rect x="52" y="33" width="12" height="14" rx="6" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)" stroke-width="1.5"/><path d="M46 38 Q58 50 70 38" stroke="rgba(255,255,255,0.18)" stroke-width="2" fill="none" stroke-linecap="round"/><rect x="43" y="52" width="30" height="14" rx="7" fill="rgba(62,255,200,0.07)" stroke="rgba(62,255,200,0.4)" stroke-width="1.5"/><text x="49" y="62" fill="rgba(62,255,200,0.7)" font-size="8" font-family="sans-serif">fist</text><line x1="58" y1="48" x2="58" y2="52" stroke="#3effc8" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="2 2"/><path d="M55 51 L58 54 L61 51" stroke="#3effc8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><text x="78" y="43" fill="#3effc8" font-size="9" font-weight="700" font-family="sans-serif">↓ push</text><text x="8" y="76" fill="rgba(255,255,255,0.22)" font-size="7.5" font-family="sans-serif">side view · jaw opens against fist</text></svg>`
+    result:'Tighter submental floor, sharper jaw-neck boundary at 6–8 weeks.'
   },
 ];
 
@@ -1244,7 +1225,7 @@ function renderToday(){
 }
 
 // ═══ LOOKS ═══
-let aCat='All';
+let aCat='Exercises';
 function renderLooks(){
   const tipCats=['All','Exercises',...new Set(TIPS.map(t=>t.cat))];
   const row=document.getElementById('cat-row'); row.innerHTML='';
@@ -1285,6 +1266,7 @@ function renderLooks(){
           <div class="ex-cue"><span>How:</span> ${ex.cue}</div>
           <div class="ex-result"><strong>Result:</strong> ${ex.result}</div>
           <div class="ex-study-cite">${ex.study}</div>
+          ${ex.yt?`<a href="${ex.yt}" target="_blank" rel="noopener" class="ex-yt-btn">▶ Watch tutorial</a>`:''}
           ${ex.yt?`<a class="ex-yt-btn" href="${ex.yt}" target="_blank" rel="noopener">▶ Watch tutorial</a>`:''}
         </div>`;
       el.querySelector('.ex-body').addEventListener('click',()=>el.classList.toggle('open'));
@@ -1670,8 +1652,6 @@ document.getElementById('budget-summary').addEventListener('click',()=>{
 });
 
 function renderCash(){
-  document.getElementById('curr-try').classList.toggle('active',cashData.currency==='TRY');
-  document.getElementById('curr-usd').classList.toggle('active',cashData.currency==='USD');
   document.getElementById('exp-symbol').textContent=currSym();
   renderBudgetSummary();
   // category chips
@@ -1773,8 +1753,7 @@ function skipToday(){
   renderCal(); renderDayDetail(); renderBudgetSummary();
 }
 
-document.getElementById('curr-try').addEventListener('click',()=>{cashData.currency='TRY';saveCash();renderCash();});
-document.getElementById('curr-usd').addEventListener('click',()=>{cashData.currency='USD';saveCash();renderCash();});
+document.getElementById('exp-symbol').addEventListener('click',()=>{cashData.currency=cashData.currency==='TRY'?'USD':'TRY';saveCash();renderCash();});
 document.getElementById('exp-add-btn').addEventListener('click',addExpense);
 document.getElementById('exp-skip-btn').addEventListener('click',skipToday);
 document.getElementById('exp-amount').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('exp-note').focus();});
