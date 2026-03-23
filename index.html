@@ -773,6 +773,25 @@
     .sleep-sub { font-size:12px; color:var(--text2); margin-top:2px; }
     .sleep-time { font-size:22px; font-weight:800; color:#a78bfa; letter-spacing:-0.5px; line-height:1; }
     .sleep-unit { font-size:10px; color:var(--text3); font-weight:600; letter-spacing:.3px; text-align:right; }
+    /* ── LOG TAB ── */
+    .journal-textarea { width:100%; background:var(--glass2); border:1px solid var(--border); border-radius:var(--r-xs); color:var(--text); font-size:14px; font-family:inherit; padding:12px 14px; resize:none; min-height:80px; outline:none; line-height:1.55; }
+    .journal-textarea:focus { border-color:rgba(62,255,200,0.3); }
+    .journal-textarea::placeholder { color:var(--text3); }
+    .journal-save-btn { width:100%; margin-top:8px; padding:11px; border-radius:var(--r-xs); background:linear-gradient(135deg,var(--mint2),var(--mint)); border:none; color:#06060e; font-size:14px; font-weight:800; font-family:inherit; cursor:pointer; }
+    .journal-entry { background:var(--glass); border:1px solid var(--border); border-radius:var(--r-sm); padding:13px 15px; margin-bottom:6px; }
+    .journal-entry-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+    .journal-entry-date { font-size:10px; font-weight:800; color:var(--text3); letter-spacing:.4px; text-transform:uppercase; }
+    .journal-entry-del { background:none; border:none; color:var(--text3); font-size:13px; cursor:pointer; padding:0; line-height:1; }
+    .journal-entry-del:active { color:var(--danger); }
+    .journal-entry-text { font-size:14px; color:var(--text); line-height:1.55; white-space:pre-wrap; word-break:break-word; }
+    .photo-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:5px; margin-top:8px; }
+    .photo-item { position:relative; aspect-ratio:1; border-radius:var(--r-xs); overflow:hidden; }
+    .photo-item img { width:100%; height:100%; object-fit:cover; display:block; }
+    .photo-item-del { position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.65); border:none; color:#fff; width:22px; height:22px; border-radius:50%; font-size:11px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+    .photo-upload-btn { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:13px; border-radius:var(--r-sm); background:var(--glass2); border:1px dashed var(--border2); color:var(--text2); font-size:14px; font-weight:600; font-family:inherit; cursor:pointer; }
+    .photo-upload-btn:active { background:var(--glass); }
+    .notif-btn { width:100%; padding:12px; border-radius:var(--r-sm); background:var(--glass2); border:1px solid var(--border); color:var(--text2); font-size:13px; font-weight:700; font-family:inherit; cursor:pointer; text-align:center; }
+    .notif-btn.on { background:rgba(255,176,64,0.1); border-color:rgba(255,176,64,0.3); color:var(--warn); }
   </style>
 </head>
 <body>
@@ -819,9 +838,9 @@
     <div id="sch-classes"></div>
   </div>
 
-  <!-- LOOKS -->
+  <!-- RESEARCH -->
   <div class="screen hidden" id="screen-looks">
-    <div class="topbar"><div class="topbar-inner"><h1>The <span class="accent">Science</span></h1></div></div>
+    <div class="topbar"><div class="topbar-inner"><h1>Research <span class="accent">Hub</span></h1></div></div>
     <div class="cat-row" id="cat-row"></div>
     <div class="section" id="tips-list"></div>
   </div>
@@ -833,15 +852,36 @@
     <div class="section"><button class="add-btn" id="add-goal-btn">+ New goal</button></div>
   </div>
 
-  <!-- STATS -->
-  <div class="screen hidden" id="screen-stats">
-    <div class="topbar"><div class="topbar-inner"><h1>Your <span class="accent">Stats</span></h1><button class="signout-btn" id="auth-signout-btn">Sign out</button></div></div>
+  <!-- LOG -->
+  <div class="screen hidden" id="screen-log">
+    <div class="topbar"><div class="topbar-inner"><h1>My <span class="accent">Log</span></h1><button class="signout-btn" id="auth-signout-btn">Sign out</button></div></div>
     <div class="section"><div class="stat-grid" id="stat-grid"></div></div>
     <div class="section">
       <div class="section-label">This week</div>
       <div class="card" style="padding:14px"><div class="week-grid" id="week-grid"></div></div>
     </div>
     <div class="section"><div class="section-label">Last 7 days</div><div id="habit-stats"></div></div>
+    <div class="section">
+      <div class="section-label">📝 Journal</div>
+      <div class="card" style="padding:14px">
+        <textarea class="journal-textarea" id="journal-input" placeholder="How's today going..."></textarea>
+        <button class="journal-save-btn" id="journal-save-btn">Save note</button>
+      </div>
+      <div id="journal-list" style="margin-top:8px"></div>
+    </div>
+    <div class="section">
+      <div class="section-label">📸 Progress photos</div>
+      <input type="file" id="photo-input" accept="image/*" style="display:none">
+      <button class="photo-upload-btn" id="photo-upload-btn">📷 &nbsp;Add photo</button>
+      <div class="photo-grid" id="photo-grid"></div>
+    </div>
+    <div class="section">
+      <div class="section-label">🔔 Reminders</div>
+      <div class="card" style="padding:14px">
+        <button class="notif-btn" id="notif-btn">Enable class reminders at 11 PM</button>
+        <div style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.5">Notifies you of tomorrow's classes + recommended sleep time. Requires the app to be open or running in background.</div>
+      </div>
+    </div>
   </div>
 
   <!-- CASH -->
@@ -934,11 +974,11 @@
   <nav class="nav" id="nav">
     <div class="nav-item active" data-tab="today"><div class="nav-icon">◈</div><div class="nav-label">Today</div></div>
     <div class="nav-item" data-tab="schedule"><div class="nav-icon">◫</div><div class="nav-label">Class</div></div>
-    <div class="nav-item" data-tab="looks"><div class="nav-icon">◉</div><div class="nav-label">Looks</div></div>
+    <div class="nav-item" data-tab="research"><div class="nav-icon">◉</div><div class="nav-label">Research</div></div>
     <div class="nav-item" data-tab="goals"><div class="nav-icon">◎</div><div class="nav-label">Goals</div></div>
     <div class="nav-item" data-tab="cash"><div class="nav-icon">◑</div><div class="nav-label">Cash</div></div>
     <div class="nav-item" data-tab="nails"><div class="nav-icon">◒</div><div class="nav-label">Nails</div></div>
-    <div class="nav-item" data-tab="stats"><div class="nav-icon">▣</div><div class="nav-label">Stats</div></div>
+    <div class="nav-item" data-tab="log"><div class="nav-icon">▣</div><div class="nav-label">Log</div></div>
     <div class="nav-item" data-tab="chat"><div class="nav-icon">◇</div><div class="nav-label">Ask</div></div>
   </nav>
 </div>
@@ -1562,24 +1602,112 @@ function renderGoals(){
   });
 }
 
-// ═══ STATS ═══
-function renderStats(){
+// ═══ JOURNAL ═══
+let journal=JSON.parse(localStorage.getItem('m_journal')||'[]');
+function saveJournal(){localStorage.setItem('m_journal',JSON.stringify(journal));}
+function addJournalEntry(text){if(!text.trim())return;journal.unshift({id:Date.now(),date:todayKey(),text:text.trim()});saveJournal();renderLog();}
+function delJournalEntry(id){journal=journal.filter(e=>e.id!==id);saveJournal();renderLog();}
+
+// ═══ PHOTOS ═══
+let photos=JSON.parse(localStorage.getItem('m_photos')||'[]');
+function savePhotos(){localStorage.setItem('m_photos',JSON.stringify(photos));}
+function addPhoto(src){photos.unshift({id:Date.now(),date:todayKey(),src});if(photos.length>20)photos=photos.slice(0,20);savePhotos();renderLog();}
+function delPhoto(id){photos=photos.filter(p=>p.id!==id);savePhotos();renderLog();}
+function compressAndAddPhoto(file){
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{
+      const MAX=800;let w=img.width,h=img.height;
+      if(w>h){if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}}else{if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}}
+      const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+      cv.getContext('2d').drawImage(img,0,0,w,h);
+      addPhoto(cv.toDataURL('image/jpeg',0.75));
+    };img.src=e.target.result;
+  };reader.readAsDataURL(file);
+}
+
+// ═══ NOTIFICATIONS ═══
+let _notifTimer=null;
+function scheduleClassReminder(){
+  if(typeof Notification==='undefined'||Notification.permission!=='granted')return;
+  clearTimeout(_notifTimer);
+  const now=new Date(),next=new Date();
+  next.setHours(23,0,0,0);if(next<=now)next.setDate(next.getDate()+1);
+  _notifTimer=setTimeout(()=>{
+    const tmr=new Date();tmr.setDate(tmr.getDate()+1);
+    const cls=SCHEDULE[tmr.getDay()]||[];
+    if(cls.length){
+      const sp=sleepPlan();
+      const names=[...new Set(cls.map(c=>c.name))].join(', ');
+      new Notification('Classes tomorrow 🎒',{
+        body:`${names}\nSleep by ${sp.bed} → wake ${sp.wake}`,
+        icon:'./icon-192.png',tag:'class-reminder'
+      });
+    }
+    scheduleClassReminder();
+  },next-now);
+}
+async function toggleNotifications(){
+  if(typeof Notification==='undefined'){alert('Notifications not supported on this device.');return;}
+  if(Notification.permission==='granted'&&localStorage.getItem('notif_on')==='1'){
+    localStorage.removeItem('notif_on');clearTimeout(_notifTimer);renderLog();return;
+  }
+  const perm=await Notification.requestPermission();
+  if(perm==='granted'){localStorage.setItem('notif_on','1');scheduleClassReminder();}
+  renderLog();
+}
+
+// ═══ LOG ═══
+function renderLog(){
+  // stats
   const t=todayKey(),log=S.log[t]||{};
   const td=HABITS.filter(h=>log[h.id]).length;
   const lng=Math.max(0,...Object.values(S.str).map(s=>s.count||0));
-  const total=Object.values(S.log).reduce((a,d)=>a+Object.values(d).filter(Boolean).length,0);
+  const total=Object.values(S.log).reduce((a,d)=>a+Object.values(d).filter(v=>v&&typeof v!=='number').length,0);
   document.getElementById('stat-grid').innerHTML=[['',td,'Done today'],['',globalStreak(),'Current streak'],['',lng,'Longest streak'],['',total,'Total check-ins']].map(([,v,l])=>`<div class="stat-card"><div class="stat-val">${v}</div><div class="stat-label">${l}</div></div>`).join('');
-  const wg=document.getElementById('week-grid'); wg.innerHTML='';
+  const wg=document.getElementById('week-grid');wg.innerHTML='';
   const days=['M','T','W','T','F','S','S'];
   for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const k=d.toISOString().split('T')[0];const dl=S.log[k]||{};const dn=HABITS.filter(h=>dl[h.id]).length;const isT=k===t;const f=dn>=HABITS.length*0.5;const div=document.createElement('div');div.className='wday'+(f?' filled':'')+(isT?' today':'');div.innerHTML=`<div class="wday-label">${days[6-i]}</div><div class="wday-dot"></div>`;wg.appendChild(div);}
-  const hs=document.getElementById('habit-stats'); hs.innerHTML='';
+  const hs=document.getElementById('habit-stats');hs.innerHTML='';
   HABITS.forEach(h=>{let c=0;for(let i=0;i<7;i++){const d=new Date();d.setDate(d.getDate()-i);if(S.log[d.toISOString().split('T')[0]]?.[h.id])c++;}const p=Math.round(c/7*100);const el=document.createElement('div');el.className='card';el.style.marginBottom='7px';el.innerHTML=`<div style="padding:12px 14px"><div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;font-weight:500"><span>${h.name}</span><span style="color:var(--mint);font-weight:700">${c}/7</span></div><div class="progress-track"><div class="progress-fill" style="width:${p}%"></div></div></div>`;hs.appendChild(el);});
+  // journal
+  const jsBtn=document.getElementById('journal-save-btn');
+  if(jsBtn)jsBtn.onclick=()=>{const inp=document.getElementById('journal-input');addJournalEntry(inp.value);inp.value='';};
+  const jList=document.getElementById('journal-list');jList.innerHTML='';
+  journal.forEach(entry=>{
+    const el=document.createElement('div');el.className='journal-entry';
+    const dateStr=new Date(entry.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+    el.innerHTML=`<div class="journal-entry-header"><span class="journal-entry-date">${dateStr}</span><button class="journal-entry-del" data-id="${entry.id}">✕</button></div><div class="journal-entry-text">${entry.text.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div>`;
+    el.querySelector('.journal-entry-del').addEventListener('click',()=>delJournalEntry(entry.id));
+    jList.appendChild(el);
+  });
+  // photos
+  const puBtn=document.getElementById('photo-upload-btn');
+  if(puBtn)puBtn.onclick=()=>document.getElementById('photo-input').click();
+  const piInput=document.getElementById('photo-input');
+  if(piInput)piInput.onchange=function(){const f=this.files[0];if(!f)return;compressAndAddPhoto(f);this.value='';};
+  const pGrid=document.getElementById('photo-grid');pGrid.innerHTML='';
+  photos.forEach(p=>{
+    const el=document.createElement('div');el.className='photo-item';
+    el.innerHTML=`<img src="${p.src}" loading="lazy"><button class="photo-item-del" data-id="${p.id}">✕</button>`;
+    el.querySelector('.photo-item-del').addEventListener('click',e=>{e.stopPropagation();delPhoto(p.id);});
+    pGrid.appendChild(el);
+  });
+  // notifications button
+  const nBtn=document.getElementById('notif-btn');
+  if(nBtn){
+    const isOn=typeof Notification!=='undefined'&&Notification.permission==='granted'&&localStorage.getItem('notif_on')==='1';
+    nBtn.textContent=isOn?'🔔 Class reminders: ON — tap to disable':'🔕 Enable class reminders (11 PM)';
+    nBtn.className='notif-btn'+(isOn?' on':'');
+    nBtn.onclick=toggleNotifications;
+  }
 }
 
 // ═══ TABS ═══
 let tab='today';
-const tabMap={today:'screen-today',schedule:'screen-schedule',looks:'screen-looks',goals:'screen-goals',stats:'screen-stats',cash:'screen-cash',nails:'screen-nails'};
-const renderMap={today:renderToday,schedule:renderSchedule,looks:renderLooks,goals:renderGoals,stats:renderStats,cash:renderCash,nails:renderNails};
+const tabMap={today:'screen-today',schedule:'screen-schedule',research:'screen-looks',goals:'screen-goals',log:'screen-log',cash:'screen-cash',nails:'screen-nails'};
+const renderMap={today:renderToday,schedule:renderSchedule,research:renderLooks,goals:renderGoals,log:renderLog,cash:renderCash,nails:renderNails};
 function switchTab(t){
   if(t==='chat'){openChat();return;}
   tab=t;
@@ -2251,6 +2379,7 @@ document.getElementById('auth-signout-btn').addEventListener('click',()=>_sb.aut
 if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 switchTab('today');
 initAuth();
+if(localStorage.getItem('notif_on')==='1') scheduleClassReminder();
 </script>
 </body>
 </html>
