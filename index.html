@@ -8,6 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="Mint">
   <meta name="theme-color" content="#06060e">
   <link rel="manifest" href="manifest.json">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <title>Mint</title>
   <style>
     :root {
@@ -697,6 +698,13 @@
     .bstat-bar { height:3px; background:var(--border); border-radius:2px; margin-top:8px; overflow:hidden; }
     .bstat-bar-fill { height:100%; border-radius:2px; background:var(--mint); transition:width 0.4s; }
     .bstat-bar-fill.red { background:var(--danger); }
+    /* ── SYNC + AUTH ── */
+    .sync-dot { width:7px;height:7px;border-radius:50%;background:var(--mint);transition:background 0.4s;flex-shrink:0; }
+    .sync-dot.syncing { background:var(--warn);animation:sync-pulse 1s infinite; }
+    .sync-dot.error,.sync-dot.offline { background:var(--danger); }
+    @keyframes sync-pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
+    .signout-btn { background:none;border:none;color:var(--text3);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;padding:6px 2px;letter-spacing:0.2px; }
+    .signout-btn:active { color:var(--danger); }
     /* Skip button + zero-day */
     .exp-btn-row { display:flex; gap:8px; }
     .exp-skip-btn { flex:0 0 auto; padding:12px 16px; border-radius:var(--r-sm); background:var(--glass2); border:1px solid var(--border); color:var(--text2); font-size:13px; font-weight:700; font-family:inherit; cursor:pointer; white-space:nowrap; }
@@ -731,7 +739,10 @@
           <h1>Good <span class="accent" id="gword">morning</span></h1>
           <div class="topbar-date" id="topbar-date"></div>
         </div>
-        <div class="streak-pill">🔥 <span id="streak-n">0</span>d</div>
+        <div style="display:flex;align-items:center;gap:9px">
+          <div class="sync-dot" id="sync-dot" title="Synced"></div>
+          <div class="streak-pill">🔥 <span id="streak-n">0</span>d</div>
+        </div>
       </div>
     </div>
     <div class="progress-wrap">
@@ -766,7 +777,7 @@
 
   <!-- STATS -->
   <div class="screen hidden" id="screen-stats">
-    <div class="topbar"><div class="topbar-inner"><h1>Your <span class="accent">Stats</span></h1></div></div>
+    <div class="topbar"><div class="topbar-inner"><h1>Your <span class="accent">Stats</span></h1><button class="signout-btn" id="auth-signout-btn">Sign out</button></div></div>
     <div class="section"><div class="stat-grid" id="stat-grid"></div></div>
     <div class="section">
       <div class="section-label">This week</div>
@@ -935,6 +946,24 @@
     <div class="nail-modal-sub">Mark it as recovered — that's progress.</div>
     <button class="nm-btn nm-btn-green" id="nr-yes-btn">Yes, it's recovered</button>
     <button class="nm-btn nm-btn-cancel" id="nr-cancel-btn">Cancel</button>
+  </div>
+</div>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen" style="position:fixed;inset:0;z-index:500;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 28px;">
+  <div style="width:100%;max-width:320px;display:flex;flex-direction:column;align-items:center;gap:22px;text-align:center">
+    <div class="setup-orb" style="width:76px;height:76px;font-size:34px;box-shadow:0 0 40px rgba(62,255,200,0.15)">◈</div>
+    <div>
+      <div style="font-size:36px;font-weight:800;letter-spacing:-1.2px;line-height:1;background:linear-gradient(135deg,var(--mint),#00c8ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Mint</div>
+      <div style="font-size:14px;color:var(--text2);margin-top:9px;line-height:1.55">Sign in to sync between your phone and laptop.</div>
+    </div>
+    <div style="width:100%;display:flex;flex-direction:column;gap:10px">
+      <input class="setup-input" type="email" id="auth-email" placeholder="Email" autocomplete="email" inputmode="email">
+      <input class="setup-input" type="password" id="auth-pass" placeholder="Password" autocomplete="current-password">
+      <div id="auth-err" style="font-size:13px;min-height:18px;padding-left:2px;text-align:left;color:var(--danger)"></div>
+      <button class="setup-cta" id="auth-signin-btn">Sign in</button>
+      <button id="auth-signup-btn" style="width:100%;padding:14px;background:var(--glass);border:1px solid var(--border);border-radius:var(--r-sm);font-size:14px;font-weight:700;color:var(--text2);cursor:pointer;font-family:inherit;letter-spacing:-0.1px;margin-top:2px">Create account</button>
+    </div>
   </div>
 </div>
 
@@ -1154,7 +1183,7 @@ let S = {
   str:   JSON.parse(localStorage.getItem('m_str')   || '{}'),
   goals: JSON.parse(localStorage.getItem('m_goals') || 'null') || DEFAULT_GOALS,
 };
-function save(){ localStorage.setItem('m_log',JSON.stringify(S.log)); localStorage.setItem('m_str',JSON.stringify(S.str)); localStorage.setItem('m_goals',JSON.stringify(S.goals)); }
+function save(){ localStorage.setItem('m_log',JSON.stringify(S.log)); localStorage.setItem('m_str',JSON.stringify(S.str)); localStorage.setItem('m_goals',JSON.stringify(S.goals)); _push(); }
 
 function ykey(){ const d=new Date(); d.setDate(d.getDate()-1); return d.toISOString().split('T')[0]; }
 function upStreak(id,done){
@@ -1336,7 +1365,7 @@ let nailData = JSON.parse(localStorage.getItem('m_nails') || 'null') || {
   startDate: todayKey(),
 };
 if(!nailData.startDate) nailData.startDate = todayKey();
-function saveNails(){ localStorage.setItem('m_nails', JSON.stringify(nailData)); }
+function saveNails(){ localStorage.setItem('m_nails', JSON.stringify(nailData)); _push(); }
 
 let pendingNailIdx = -1;
 
@@ -1518,7 +1547,7 @@ if(!cashData.currency) cashData.currency='TRY';
 if(!cashData.entries)  cashData.entries={};
 if(!cashData.zeroDays) cashData.zeroDays={};
 
-function saveCash(){ localStorage.setItem('m_cash',JSON.stringify(cashData)); }
+function saveCash(){ localStorage.setItem('m_cash',JSON.stringify(cashData)); _push(); }
 
 let calYear=new Date().getFullYear(), calMonth=new Date().getMonth();
 let selDay=todayKey(), selCat='food';
@@ -1901,9 +1930,93 @@ document.getElementById('g-save').addEventListener('click',()=>{
   save(); document.getElementById('goal-overlay').classList.remove('open'); renderGoals();
 });
 
+// ═══ SUPABASE SYNC ═══
+const _sb = supabase.createClient(
+  'https://qdyfeqlyyjgunmdnnvah.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkeWZlcWx5eWpndW5tZG5udmFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzI5NDcsImV4cCI6MjA4OTg0ODk0N30.01EKuXU49rJ-kjhSJVhgI3PgCbGIvREQgs4zc1-BF7Q'
+);
+let _sbUser = null, _sbTimeout = null;
+
+function _dot(s){ const el=document.getElementById('sync-dot'); if(el) el.className='sync-dot'+' '+s; }
+
+async function _push(now=false){
+  if(!_sbUser) return;
+  clearTimeout(_sbTimeout);
+  const go = async()=>{
+    _dot('syncing');
+    try{
+      const {error}=await _sb.from('user_data').upsert(
+        {user_id:_sbUser.id,log:S.log,str:S.str,goals:S.goals,nails:nailData,cash:cashData,updated_at:new Date().toISOString()},
+        {onConflict:'user_id'}
+      );
+      _dot(error?'error':'synced');
+    }catch(e){ _dot('offline'); }
+  };
+  if(now) await go(); else _sbTimeout=setTimeout(go,1500);
+}
+
+async function _pull(){
+  if(!_sbUser) return;
+  _dot('syncing');
+  try{
+    const {data,error}=await _sb.from('user_data').select('*').eq('user_id',_sbUser.id).single();
+    if(error?.code==='PGRST116'){ await _push(true); return; } // first login — push local data up
+    if(data){
+      if(data.log)   S.log   = data.log;
+      if(data.str)   S.str   = data.str;
+      if(data.goals) S.goals = data.goals;
+      if(data.nails) nailData = {...nailData,...data.nails};
+      if(data.cash)  cashData = {...cashData,...data.cash};
+      localStorage.setItem('m_log',JSON.stringify(S.log));
+      localStorage.setItem('m_str',JSON.stringify(S.str));
+      localStorage.setItem('m_goals',JSON.stringify(S.goals));
+      localStorage.setItem('m_nails',JSON.stringify(nailData));
+      localStorage.setItem('m_cash',JSON.stringify(cashData));
+      const rf=renderMap[tab]; if(typeof rf==='function') rf();
+      _dot('synced');
+    }
+  }catch(e){ _dot('offline'); }
+}
+
+function _showAuth(){ document.getElementById('auth-screen').style.display='flex'; }
+function _hideAuth(){ document.getElementById('auth-screen').style.display='none'; }
+
+async function _authSubmit(isUp){
+  const em=document.getElementById('auth-email').value.trim();
+  const pw=document.getElementById('auth-pass').value;
+  const errEl=document.getElementById('auth-err');
+  errEl.style.color='var(--danger)'; errEl.textContent='';
+  if(!em||!pw){ errEl.textContent='Enter email and password.'; return; }
+  document.getElementById('auth-signin-btn').disabled=true;
+  document.getElementById('auth-signup-btn').disabled=true;
+  const {error}=isUp
+    ? await _sb.auth.signUp({email:em,password:pw})
+    : await _sb.auth.signInWithPassword({email:em,password:pw});
+  document.getElementById('auth-signin-btn').disabled=false;
+  document.getElementById('auth-signup-btn').disabled=false;
+  if(error){ errEl.textContent=error.message; return; }
+  if(isUp){ errEl.style.color='var(--mint)'; errEl.textContent='Check your email to confirm, then sign in.'; }
+}
+
+async function initAuth(){
+  const {data:{session}}=await _sb.auth.getSession();
+  if(session){ _sbUser=session.user; _hideAuth(); _pull(); }
+  _sb.auth.onAuthStateChange(async(ev,sess)=>{
+    _sbUser=sess?.user||null;
+    if(ev==='SIGNED_IN'){ _hideAuth(); await _pull(); }
+    else if(ev==='SIGNED_OUT'){ _showAuth(); }
+  });
+}
+
+document.getElementById('auth-signin-btn').addEventListener('click',()=>_authSubmit(false));
+document.getElementById('auth-signup-btn').addEventListener('click',()=>_authSubmit(true));
+document.getElementById('auth-pass').addEventListener('keydown',e=>{ if(e.key==='Enter') _authSubmit(false); });
+document.getElementById('auth-signout-btn').addEventListener('click',()=>_sb.auth.signOut());
+
 // ═══ SW + INIT ═══
 if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 switchTab('today');
+initAuth();
 </script>
 </body>
 </html>
