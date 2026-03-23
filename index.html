@@ -753,6 +753,26 @@
     .laundry-sub { font-size:12px; color:var(--text2); margin-top:2px; }
     .laundry-btn { background:var(--mint-dim); border:1px solid var(--mint-glow); border-radius:var(--r-xs); padding:8px 14px; font-size:12px; font-weight:700; color:var(--mint); cursor:pointer; white-space:nowrap; font-family:inherit; flex-shrink:0; }
     .laundry-btn:active { background:var(--mint-glow); }
+    /* ── WATER ── */
+    .water-card { margin:0 20px 12px; background:var(--glass); border:1px solid var(--border); border-radius:var(--r); padding:14px 16px; }
+    .water-top { display:flex; align-items:baseline; gap:6px; margin-bottom:8px; }
+    .water-emoji { font-size:18px; margin-right:4px; line-height:1; }
+    .water-amount { font-size:22px; font-weight:800; color:var(--text); letter-spacing:-0.5px; }
+    .water-target { font-size:12px; color:var(--text3); }
+    .water-track { height:4px; background:var(--border); border-radius:2px; overflow:hidden; margin-bottom:10px; }
+    .water-fill { height:100%; border-radius:2px; background:linear-gradient(90deg,#0096c7,#48cae4); transition:width .35s; }
+    .water-btns { display:flex; gap:8px; }
+    .water-btn { flex:1; padding:9px 0; border-radius:var(--r-xs); background:rgba(0,150,199,0.12); border:1px solid rgba(72,202,228,0.22); color:#48cae4; font-size:13px; font-weight:700; font-family:inherit; cursor:pointer; }
+    .water-btn:active { background:rgba(72,202,228,0.25); }
+    .water-btn.reset { background:var(--glass2); border-color:var(--border); color:var(--text3); flex:0 0 auto; padding:9px 14px; font-size:12px; }
+    /* ── SLEEP ── */
+    .sleep-card { margin:0 20px 16px; background:var(--glass); border:1px solid rgba(167,139,250,0.18); border-radius:var(--r); padding:14px 16px; display:flex; align-items:center; gap:14px; }
+    .sleep-info { flex:1; }
+    .sleep-label { font-size:10px; font-weight:800; color:var(--text3); letter-spacing:.5px; text-transform:uppercase; margin-bottom:3px; }
+    .sleep-title { font-size:14px; font-weight:600; color:var(--text); }
+    .sleep-sub { font-size:12px; color:var(--text2); margin-top:2px; }
+    .sleep-time { font-size:22px; font-weight:800; color:#a78bfa; letter-spacing:-0.5px; line-height:1; }
+    .sleep-unit { font-size:10px; color:var(--text3); font-weight:600; letter-spacing:.3px; text-align:right; }
   </style>
 </head>
 <body>
@@ -785,9 +805,11 @@
     </div>
     <div id="up-next-card" style="display:none"></div>
     <div id="laundry-card"></div>
+    <div id="water-card"></div>
     <div class="section"><div class="section-label">☀️ Morning</div><div class="card" id="cl-morning"></div></div>
     <div class="section"><div class="section-label">⚡ During the day</div><div class="card" id="cl-day"></div></div>
     <div class="section"><div class="section-label">🌙 Tonight</div><div class="card" id="cl-night"></div></div>
+    <div id="sleep-card"></div>
   </div>
 
   <!-- SCHEDULE -->
@@ -1200,6 +1222,32 @@ function nextWashDate(from){
   const days=dow===1?7:(8-dow)%7||7;
   d.setDate(d.getDate()+days); return d.toISOString().split('T')[0];
 }
+// ─── SLEEP PLAN ──────────────────────────────────────────────────────────────
+function tomorrowDow(){const d=new Date();d.setDate(d.getDate()+1);return d.getDay();}
+function tomorrowClasses(){return SCHEDULE[tomorrowDow()]||[];}
+function fmt12(h,m){const ampm=h>=12?'PM':'AM';const hh=h%12||12;return `${hh}:${String(m).padStart(2,'0')} ${ampm}`;}
+function sleepPlan(){
+  const tc=tomorrowClasses();
+  let wakeH,wakeM;
+  if(tc.length){
+    const [fh,fm]=tc[0].start.split(':').map(Number);
+    // commute 20min + 30min buffer = 50min before class
+    let wmTotal=fh*60+fm-50;
+    if(wmTotal<0)wmTotal=0;
+    wakeH=Math.floor(wmTotal/60); wakeM=wmTotal%60;
+  } else {
+    wakeH=11; wakeM=0; // no class → target 11am
+  }
+  let bedTotal=wakeH*60+wakeM-8*60;
+  const bedH=((Math.floor(bedTotal/60))%24+24)%24;
+  const bedM=((bedTotal%60)+60)%60;
+  return {wake:fmt12(wakeH,wakeM),bed:fmt12(bedH,bedM),hasClass:tc.length>0,firstClass:tc[0]||null};
+}
+// ─── WATER ───────────────────────────────────────────────────────────────────
+const WATER_GOAL=2500;
+function getWater(){return (S.log[todayKey()]||{}).water||0;}
+function addWater(ml){const t=todayKey();if(!S.log[t])S.log[t]={};S.log[t].water=(S.log[t].water||0)+ml;save();renderToday();}
+function resetWater(){const t=todayKey();if(S.log[t])S.log[t].water=0;save();renderToday();}
 // ─────────────────────────────────────────────────────────────────────────────
 function daysFromNow(n) { const d=new Date(); d.setDate(d.getDate()+n); return d.toISOString().split('T')[0]; }
 
@@ -1324,6 +1372,30 @@ function renderToday(){
     const btn=document.getElementById('laundry-mark-btn');
     if(btn) btn.addEventListener('click',markLaundry);
   }
+  // water card
+  const wEl=document.getElementById('water-card');
+  if(wEl){
+    const ml=getWater();
+    const pct=Math.min(100,Math.round(ml/WATER_GOAL*100));
+    wEl.innerHTML=`<div class="water-card">
+      <div class="water-top">
+        <span class="water-emoji">💧</span>
+        <span class="water-amount">${ml<1000?ml+'ml':(ml/1000).toFixed(1)+'L'}</span>
+        <span class="water-target">/ ${WATER_GOAL/1000}L goal · ${pct}%</span>
+      </div>
+      <div class="water-track"><div class="water-fill" style="width:${pct}%"></div></div>
+      <div class="water-btns">
+        <button class="water-btn" id="w250">+250ml</button>
+        <button class="water-btn" id="w500">+500ml</button>
+        <button class="water-btn" id="w750">+750ml</button>
+        ${ml>0?`<button class="water-btn reset" id="wReset">↺</button>`:''}
+      </div>
+    </div>`;
+    document.getElementById('w250')?.addEventListener('click',()=>addWater(250));
+    document.getElementById('w500')?.addEventListener('click',()=>addWater(500));
+    document.getElementById('w750')?.addEventListener('click',()=>addWater(750));
+    document.getElementById('wReset')?.addEventListener('click',resetWater);
+  }
   ['morning','day','night'].forEach(sec=>{
     const el=document.getElementById('cl-'+sec); el.innerHTML='';
     CHECKLIST.filter(c=>c.sec===sec).forEach(item=>{
@@ -1342,6 +1414,22 @@ function renderToday(){
       el.appendChild(d);
     });
   });
+  // sleep card
+  const sEl=document.getElementById('sleep-card');
+  if(sEl){
+    const sp=sleepPlan();
+    sEl.innerHTML=`<div class="sleep-card">
+      <div class="sleep-info">
+        <div class="sleep-label">🌙 Tonight's plan</div>
+        <div class="sleep-title">Sleep by <strong>${sp.bed}</strong> → wake at ${sp.wake}</div>
+        <div class="sleep-sub">${sp.hasClass?`${sp.firstClass.name} at ${sp.firstClass.start} tomorrow · 20min commute`:'No class tomorrow — free wake time'}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="sleep-time">${sp.bed}</div>
+        <div class="sleep-unit">bedtime</div>
+      </div>
+    </div>`;
+  }
 }
 
 // ═══ LOOKS ═══
